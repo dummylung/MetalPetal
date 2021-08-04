@@ -11,7 +11,7 @@ import CoreImage
 #if SWIFT_PACKAGE
 @_implementationOnly import MetalPetalObjectiveC.Extension
 #else
-@_implementationOnly import MetalPetal.Extension
+//@_implementationOnly import MetalPetal.Extension
 #endif
 
 /// `MTICoreImageKernel` provides the ability to use CoreImage filters with MetalPetal with little or no overhead.
