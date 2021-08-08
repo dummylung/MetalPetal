@@ -24,6 +24,7 @@ __attribute__((objc_subclassing_restricted))
 @interface MTIMultilayerCompositeKernel : NSObject <MTIKernel>
 
 - (MTIImage *)applyToBackgroundImage:(MTIImage *)image
+ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSession
                               layers:(NSArray<MTILayer *> *)layers
                    rasterSampleCount:(NSUInteger)rasterSampleCount
                      outputAlphaType:(MTIAlphaType)outputAlphaType

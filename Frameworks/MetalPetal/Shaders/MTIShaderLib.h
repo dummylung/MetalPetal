@@ -261,6 +261,17 @@ namespace metalpetal {
         return unpremultiply(src + dst * (1.0 - src.a));
     }
 
+    METAL_FUNC float4 reverseNormalBlend(float4 Cr, float4 Cb) {
+        float4 r = premultiply(Cr);
+        float4 d = premultiply(Cb);
+        float sa = (r.a - d.a) / (1 - d.a);
+        sa = max(sa,0.00001);
+        float sr = r.r - d.r*(1-sa);
+        float sg = r.g - d.g*(1-sa);
+        float sb = r.b - d.b*(1-sa);
+        return unpremultiply(float4(sr, sg, sb, sa));
+    }
+    
     METAL_FUNC float4 blendBaseAlpha(float4 Cb, float4 Cs, float4 B) {
         float4 Cr = float4((1 - Cb.a) * Cs.rgb + Cb.a * saturate(B.rgb), Cs.a);
         return normalBlend(Cb, Cr);

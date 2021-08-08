@@ -355,6 +355,8 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic,copy,readonly) MTIImage *backgroundImage;
 
+@property (nonatomic,copy,readonly) MTIImage *backgroundImageBeforeCurrentSession;
+
 @property (nonatomic,strong,readonly) MTIMultilayerCompositeKernel *kernel;
 
 @property (nonatomic,copy,readonly) NSArray<MTILayer *> *layers;
@@ -533,6 +535,12 @@ __attribute__((objc_subclassing_restricted))
             [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.mask.content] atIndex:2];
             [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.mask.content] atIndex:2];
         }
+        
+        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImage] atIndex:3];
+        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImage] atIndex:3];
+        
+        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
+        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
         
         //parameters
         MTIMultilayerCompositingLayerShadingParameters parameters;
@@ -791,6 +799,7 @@ __attribute__((objc_subclassing_restricted))
 
 - (instancetype)initWithKernel:(MTIMultilayerCompositeKernel *)kernel
                backgroundImage:(MTIImage *)backgroundImage
+backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSession
                         layers:(NSArray<MTILayer *> *)layers
              rasterSampleCount:(NSUInteger)rasterSampleCount
                outputAlphaType:(MTIAlphaType)outputAlphaType
@@ -799,17 +808,20 @@ __attribute__((objc_subclassing_restricted))
     if (self = [super init]) {
         NSParameterAssert(rasterSampleCount >= 1);
         NSParameterAssert(backgroundImage);
+        NSParameterAssert(backgroundImageBeforeCurrentSession);
         NSParameterAssert(kernel);
         NSParameterAssert(outputAlphaType != MTIAlphaTypeUnknown);
         _backgroundImage = backgroundImage;
+        _backgroundImageBeforeCurrentSession = backgroundImageBeforeCurrentSession;
         _alphaType = outputAlphaType;
         _kernel = kernel;
         _layers = layers;
         _dimensions = outputTextureDimensions;
         _outputPixelFormat = outputPixelFormat;
         _rasterSampleCount = rasterSampleCount;
-        NSMutableArray *dependencies = [NSMutableArray arrayWithCapacity:layers.count + 1];
+        NSMutableArray *dependencies = [NSMutableArray arrayWithCapacity:layers.count + 1 + 1];
         [dependencies addObject:backgroundImage];
+        [dependencies addObject:backgroundImageBeforeCurrentSession];
         for (MTILayer *layer in layers) {
             [dependencies addObject:layer.content];
             if (layer.compositingMask) {
@@ -828,6 +840,8 @@ __attribute__((objc_subclassing_restricted))
     NSAssert(dependencies.count == self.dependencies.count, @"");
     NSInteger pointer = 0;
     MTIImage *backgroundImage = dependencies[pointer];
+    pointer += 1;
+    MTIImage *backgroundImageBeforeCurrentSession = dependencies[pointer];
     pointer += 1;
     NSMutableArray *newLayers = [NSMutableArray arrayWithCapacity:self.layers.count];
     for (MTILayer *layer in self.layers) {
@@ -850,7 +864,7 @@ __attribute__((objc_subclassing_restricted))
         MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode];
         [newLayers addObject:newLayer];
     }
-    return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage layers:newLayers rasterSampleCount:_rasterSampleCount outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
+    return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage backgroundImageBeforeCurrentSession:backgroundImageBeforeCurrentSession layers:newLayers rasterSampleCount:_rasterSampleCount outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
 }
 
 - (MTIImagePromiseDebugInfo *)debugInfo {
@@ -870,6 +884,7 @@ __attribute__((objc_subclassing_restricted))
 }
 
 - (MTIImage *)applyToBackgroundImage:(MTIImage *)image
+ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSession
                               layers:(NSArray<MTILayer *> *)layers
                    rasterSampleCount:(NSUInteger)rasterSampleCount
                      outputAlphaType:(MTIAlphaType)outputAlphaType
@@ -877,6 +892,7 @@ __attribute__((objc_subclassing_restricted))
                    outputPixelFormat:(MTLPixelFormat)outputPixelFormat {
     MTIMultilayerCompositingRecipe *receipt = [[MTIMultilayerCompositingRecipe alloc] initWithKernel:self
                                                                                      backgroundImage:image
+                                                                 backgroundImageBeforeCurrentSession:backgroundImageBeforeCurrentSession
                                                                                               layers:layers
                                                                                    rasterSampleCount:rasterSampleCount
                                                                                      outputAlphaType:outputAlphaType
@@ -901,6 +917,7 @@ void MTIMultilayerCompositingRenderGraphNodeOptimize(MTIRenderGraphNode *node) {
                 layers = [lastPromise.layers arrayByAddingObjectsFromArray:layers];
                 MTIMultilayerCompositingRecipe *promise = [[MTIMultilayerCompositingRecipe alloc] initWithKernel:recipe.kernel
                                                                                                  backgroundImage:lastPromise.backgroundImage
+                                                                             backgroundImageBeforeCurrentSession:nil
                                                                                                           layers:layers
                                                                                                rasterSampleCount:MAX(recipe.rasterSampleCount,lastPromise.rasterSampleCount)
                                                                                                  outputAlphaType:recipe.alphaType

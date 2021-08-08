@@ -198,6 +198,11 @@ public class MultilayerCompositingFilter: MTIFilter {
         set { internalFilter.inputBackgroundImage = newValue }
     }
     
+    public var inputBackgroundImageBeforeCurrentSession: MTIImage? {
+        get { internalFilter.inputBackgroundImageBeforeCurrentSession }
+        set { internalFilter.inputBackgroundImageBeforeCurrentSession = newValue }
+    }
+    
     public var outputAlphaType: MTIAlphaType {
         get { internalFilter.outputAlphaType }
         set { internalFilter.outputAlphaType = newValue }

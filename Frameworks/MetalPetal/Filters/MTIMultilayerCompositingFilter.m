@@ -38,6 +38,7 @@
         return _inputBackgroundImage;
     }
     return [self.class.kernel applyToBackgroundImage:_inputBackgroundImage
+                 backgroundImageBeforeCurrentSession:_inputBackgroundImageBeforeCurrentSession
                                               layers:_layers
                                    rasterSampleCount:_rasterSampleCount
                                      outputAlphaType:_outputAlphaType

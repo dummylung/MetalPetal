@@ -30,9 +30,8 @@ vertex MTIMultilayerCompositingLayerVertexOut multilayerCompositeVertexShader(
     return outVertex;
 }
 
-
 #if __HAVE_COLOR_ARGUMENTS__ && !TARGET_OS_SIMULATOR
-    
+
 fragment float4 multilayerCompositeNormalBlend_programmableBlending(
                                                     MTIMultilayerCompositingLayerVertexOut vertexIn [[ stage_in ]],
                                                     float4 currentColor [[color(0)]],
@@ -42,8 +41,14 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
                                                     texture2d<float, access::sample> compositingMaskTexture [[ texture(1) ]],
                                                     sampler compositingMaskSampler [[ sampler(1) ]],
                                                     texture2d<float, access::sample> maskTexture [[ texture(2) ]],
-                                                    sampler maskSampler [[ sampler(2) ]]
+                                                    sampler maskSampler [[ sampler(2) ]],
+                                                    texture2d<float, access::sample> backgroundTexture [[ texture(3) ]],
+                                                    sampler backgroundSampler [[ sampler(3) ]],
+                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(4) ]],
+                                                    sampler backgroundSamplerBeforeCurrentSession [[ sampler(4) ]]
                                                 ) {
+    float maxAlpha = parameters.tintColor.a;
+    
     float2 textureCoordinate = vertexIn.textureCoordinate;
     #if MTI_CUSTOM_BLEND_HAS_TEXTURE_COORDINATES_MODIFIER
     textureCoordinate = modify_source_texture_coordinates(currentColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
@@ -68,7 +73,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     }
     if (multilayer_composite_has_tint_color) {
         textureColor.rgb = parameters.tintColor.rgb;
-        textureColor.a *= parameters.tintColor.a;
+        textureColor.a *= maxAlpha;
     }
     switch (multilayer_composite_corner_curve_type) {
         case 1:
@@ -80,8 +85,34 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
         default:
             break;
     }
-    textureColor.a *= parameters.opacity;
-    return normalBlend(currentColor,textureColor);
+    
+//    return normalBlend(currentColor,textureColor);
+    
+    float2 location = vertexIn.position.xy / parameters.canvasSize;
+    
+    float4 backgroundColor = backgroundTexture.sample(backgroundSampler, location);
+    backgroundColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColor) : backgroundColor;
+    
+    float4 backgroundColorBeforeCurrentSession = backgroundTextureBeforeCurrentSession.sample(backgroundSamplerBeforeCurrentSession, location);
+    backgroundColorBeforeCurrentSession = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColorBeforeCurrentSession) : backgroundColorBeforeCurrentSession;
+    
+    float4 sessionColor = reverseNormalBlend(backgroundColor, backgroundColorBeforeCurrentSession);
+    
+    float4 blendColor = normalBlend(sessionColor, textureColor);
+    blendColor.a = min(maxAlpha, blendColor.a);
+    
+    return normalBlend(backgroundColorBeforeCurrentSession, blendColor);
+    
+    
+//    float2 location = vertexIn.position.xy / parameters.canvasSize;
+//    float4 backgroundColor = backgroundTexture.sample(backgroundSampler, location);
+//    backgroundColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColor) : backgroundColor;
+//    float4 blendColor = normalBlend(backgroundColor,textureColor);
+////    float4 blendColor = textureColor;
+//    blendColor.a = min(maxAlpha, blendColor.a);
+//
+//    return blendColor;
+    
 }
 
 #endif
