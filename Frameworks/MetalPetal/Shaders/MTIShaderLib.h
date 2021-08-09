@@ -56,6 +56,8 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     vector_float4 cornerRadius;
     
     vector_float2 layerSize;
+    
+    int fillMode;
 };
 typedef struct MTIMultilayerCompositingLayerShadingParameters MTIMultilayerCompositingLayerShadingParameters;
 

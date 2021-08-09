@@ -31,6 +31,13 @@ typedef NS_OPTIONS(NSUInteger, MTILayerFlipOptions) {
     MTILayerFlipOptionsFlipHorizontally = 1 << 1,
 } NS_SWIFT_NAME(MTILayer.FlipOptions);
 
+
+typedef NS_ENUM(NSInteger, MTILayerFillMode) {
+    MTILayerFillModeNormal,
+    MTILayerFillModeDelete
+} NS_SWIFT_NAME(MTILayer.FillMode);
+
+
 /// A MTILayer represents a compositing layer for MTIMultilayerCompositingFilter. MTILayers use a UIKit like coordinate system.
 __attribute__((objc_subclassing_restricted))
 @interface MTILayer: NSObject <NSCopying>
@@ -66,6 +73,8 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic, copy, readonly) MTIBlendMode blendMode;
 
+@property (nonatomic, readonly) MTILayerFillMode fillMode;
+
 - (instancetype)init NS_UNAVAILABLE;
 + (instancetype)new NS_UNAVAILABLE;
 
@@ -79,7 +88,7 @@ __attribute__((objc_subclassing_restricted))
 
 - (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode fillMode:(MTILayerFillMode)fillMode NS_DESIGNATED_INITIALIZER;
 
 - (CGSize)sizeInPixelForBackgroundSize:(CGSize)backgroundSize;
 

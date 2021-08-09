@@ -72,6 +72,8 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var blendMode: MTIBlendMode = .normal
         
+        public var fillMode: MTILayer.FillMode = .normal
+        
         public init(content: MTIImage) {
             self.content = content
             self.contentRegion = content.extent
@@ -100,6 +102,7 @@ public class MultilayerCompositingFilter: MTIFilter {
             hasher.combine(cornerCurve)
             hasher.combine(tintColor)
             hasher.combine(blendMode)
+            hasher.combine(fillMode)
         }
         
         private func mutating(_ block: (inout Layer) -> Void) -> Layer {
@@ -182,6 +185,10 @@ public class MultilayerCompositingFilter: MTIFilter {
         public func cornerCurve(_ curve: MTICornerCurve) -> Layer {
             self.mutating({ $0.cornerCurve = curve })
         }
+        
+        public func fillMode(_ fillMode: MTILayer.FillMode) -> Layer {
+            self.mutating({ $0.fillMode = fillMode })
+        }
     }
     
     public var outputPixelFormat: MTLPixelFormat {
@@ -243,7 +250,7 @@ extension MultilayerCompositingFilter {
 
 extension MultilayerCompositingFilter.Layer {
     fileprivate func bridgeToObjectiveC() -> MTILayer {
-        return MTILayer(content: self.content, contentRegion: self.contentRegion, contentFlipOptions: self.contentFlipOptions, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode)
+        return MTILayer(content: self.content, contentRegion: self.contentRegion, contentFlipOptions: self.contentFlipOptions, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, fillMode: self.fillMode)
     }
 }
 

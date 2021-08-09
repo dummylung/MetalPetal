@@ -47,7 +47,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
                                                     texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(4) ]],
                                                     sampler backgroundSamplerBeforeCurrentSession [[ sampler(4) ]]
                                                 ) {
-    float maxAlpha = parameters.tintColor.a;
+    float alpha = parameters.tintColor.a;
     
     float2 textureCoordinate = vertexIn.textureCoordinate;
     #if MTI_CUSTOM_BLEND_HAS_TEXTURE_COORDINATES_MODIFIER
@@ -73,7 +73,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     }
     if (multilayer_composite_has_tint_color) {
         textureColor.rgb = parameters.tintColor.rgb;
-        textureColor.a *= maxAlpha;
+        textureColor.a *= alpha;
     }
     switch (multilayer_composite_corner_curve_type) {
         case 1:
@@ -86,23 +86,42 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
             break;
     }
     
-//    return normalBlend(currentColor,textureColor);
-    
     float2 location = vertexIn.position.xy / parameters.canvasSize;
     
     float4 backgroundColor = backgroundTexture.sample(backgroundSampler, location);
     backgroundColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColor) : backgroundColor;
     
-    float4 backgroundColorBeforeCurrentSession = backgroundTextureBeforeCurrentSession.sample(backgroundSamplerBeforeCurrentSession, location);
-    backgroundColorBeforeCurrentSession = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColorBeforeCurrentSession) : backgroundColorBeforeCurrentSession;
+    float4 finalColor = backgroundColor;
     
-    float4 sessionColor = reverseNormalBlend(backgroundColor, backgroundColorBeforeCurrentSession);
+    switch (parameters.fillMode) {
+        case 0: // normal
+        {
+            float4 backgroundColorBeforeCurrentSession = backgroundTextureBeforeCurrentSession.sample(backgroundSamplerBeforeCurrentSession, location);
+            backgroundColorBeforeCurrentSession = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColorBeforeCurrentSession) : backgroundColorBeforeCurrentSession;
+            
+            float4 sessionColor = reverseNormalBlend(backgroundColor, backgroundColorBeforeCurrentSession);
+            
+            float4 blendColor = normalBlend(sessionColor, textureColor);
+            blendColor.a = min(alpha, blendColor.a);
+            
+            finalColor = normalBlend(backgroundColorBeforeCurrentSession, blendColor);
+        
+            break;
+        }
+        case 1: // delete
+            finalColor.rgb = backgroundColor.rgb;
+            finalColor.a = backgroundColor.a * (1-textureColor.a*(1-alpha));
+            if (finalColor.a < 0.01) {
+                finalColor.a = 0;
+            }
+            break;
+        default:
+            break;
+    }
     
-    float4 blendColor = normalBlend(sessionColor, textureColor);
-    blendColor.a = min(maxAlpha, blendColor.a);
+    return finalColor;
     
-    return normalBlend(backgroundColorBeforeCurrentSession, blendColor);
-    
+//    return normalBlend(currentColor,textureColor);
     
 //    float2 location = vertexIn.position.xy / parameters.canvasSize;
 //    float4 backgroundColor = backgroundTexture.sample(backgroundSampler, location);
