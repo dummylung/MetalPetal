@@ -109,14 +109,20 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
             break;
         }
         case 1: // delete
+        {
             finalColor.rgb = backgroundColor.rgb;
             finalColor.a = backgroundColor.a * (1-textureColor.a*(1-alpha));
-            if (finalColor.a < 0.01) {
-                finalColor.a = 0;
-            }
+            
             break;
+        }
         default:
             break;
+    }
+    
+    finalColor.a = float(int(floor(finalColor.a * 100))) / 100;
+    
+    if (finalColor.a <= 0.01) {
+        finalColor.a = 0;
     }
     
     return finalColor;
