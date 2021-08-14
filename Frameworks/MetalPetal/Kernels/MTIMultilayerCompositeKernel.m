@@ -493,6 +493,25 @@ __attribute__((objc_subclassing_restricted))
     
     //render layers
     CGSize backgroundImageSize = self.backgroundImage.size;
+//    if (self.layers.count >= 64) {
+//        NSLog(@"self.layers %d", self.layers.count);
+//    }
+//
+//    MTIMultilayerCompositingLayerSessionVertexes sessionVertexes;
+//    for (int i = 0; i < self.layers.count && i < 64; i++) {
+//        MTILayer *layer = self.layers[i];
+//
+//        CGSize layerPixelSize = [layer sizeInPixelForBackgroundSize:backgroundImageSize];
+//        CGPoint layerPixelPosition = [layer positionInPixelForBackgroundSize:backgroundImageSize];
+//
+//        MTIMultilayerCompositingLayerSessionVertex v;
+//        v.position = simd_make_float4(layerPixelPosition.x, layerPixelPosition.y, 1, 0);
+//        v.angle = 0;
+//        v.size = layerPixelSize.width;
+//
+//        sessionVertexes.vertexes[i] = v;
+//    }
+    
     for (MTILayer *layer in self.layers) {
         NSParameterAssert(layer.content.alphaType != MTIAlphaTypeUnknown);
         
@@ -523,6 +542,11 @@ __attribute__((objc_subclassing_restricted))
         
         [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.content] atIndex:0];
         [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.content] atIndex:0];
+        
+//        [commandEncoder setFragmentBytes:&sessionVertexes length:sizeof(sessionVertexes) atIndex:1];
+//        [commandEncoder setFragmentBytes:&transformMatrix length:sizeof(transformMatrix) atIndex:2];
+//        [commandEncoder setFragmentBytes:&orthographicMatrix length:sizeof(orthographicMatrix) atIndex:3];
+        
         
         if (layer.compositingMask) {
             NSParameterAssert(layer.compositingMask.content.alphaType != MTIAlphaTypeUnknown);

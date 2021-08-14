@@ -61,6 +61,18 @@ struct MTIMultilayerCompositingLayerShadingParameters {
 };
 typedef struct MTIMultilayerCompositingLayerShadingParameters MTIMultilayerCompositingLayerShadingParameters;
 
+//struct MTIMultilayerCompositingLayerSessionVertex {
+//    vector_float4 position;
+//    float angle;
+//    float size;
+//};
+//typedef struct MTIMultilayerCompositingLayerSessionVertex MTIMultilayerCompositingLayerSessionVertex;
+//
+//struct MTIMultilayerCompositingLayerSessionVertexes {
+//    struct MTIMultilayerCompositingLayerSessionVertex vertexes[64];
+//};
+//typedef struct MTIMultilayerCompositingLayerSessionVertexes MTIMultilayerCompositingLayerSessionVertexes;
+
 struct MTIMultilayerCompositingLayerVertex {
     vector_float4 position;
     vector_float2 textureCoordinate;
@@ -267,7 +279,7 @@ namespace metalpetal {
         float4 r = premultiply(Cr);
         float4 d = premultiply(Cb);
         float sa = (r.a - d.a) / (1 - d.a);
-        sa = max(sa,0.00001);
+        sa = max(sa,0.01);
         float sr = r.r - d.r*(1-sa);
         float sg = r.g - d.g*(1-sa);
         float sb = r.b - d.b*(1-sa);

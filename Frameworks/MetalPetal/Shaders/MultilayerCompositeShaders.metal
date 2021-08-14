@@ -32,10 +32,42 @@ vertex MTIMultilayerCompositingLayerVertexOut multilayerCompositeVertexShader(
 
 #if __HAVE_COLOR_ARGUMENTS__ && !TARGET_OS_SIMULATOR
 
+struct Rect {
+    float4 mid;
+    float width;
+    float height;
+};
+
+bool isInsideRect(float4 p, Rect r) {
+    float hw = r.width * 0.5;
+    float hh = r.height * 0.5;
+    float2 ul = float2(r.mid.x - hw, r.mid.y - hh);
+    float2 ur = float2(r.mid.x + hw, r.mid.y - hh);
+    float2 bl = float2(r.mid.x - hw, r.mid.y + hh);
+    float2 br = float2(r.mid.x + hw, r.mid.y + hh);
+    if (p.x > ul.x && p.y > ul.y
+        && p.x < ur.x && p.y > ur.y
+        && p.x > bl.x && p.y < bl.y
+        && p.x < br.x && p.y < br.y) {
+        return true;
+    }
+    return false;
+}
+
+float2 transformPointCoord(float2 pointCoord, float a, float2 anchor) {
+    float2 point20 = pointCoord - anchor;
+    float x = point20.x * cos(a) - point20.y * sin(a);
+    float y = point20.x * sin(a) + point20.y * cos(a);
+    return float2(x, y) + anchor;
+}
+
 fragment float4 multilayerCompositeNormalBlend_programmableBlending(
                                                     MTIMultilayerCompositingLayerVertexOut vertexIn [[ stage_in ]],
                                                     float4 currentColor [[color(0)]],
                                                     constant MTIMultilayerCompositingLayerShadingParameters & parameters [[buffer(0)]],
+//                                                    constant MTIMultilayerCompositingLayerSessionVertexes & sessionVertexes [[ buffer(1) ]],
+//                                                    constant float4x4 & transformMatrix [[ buffer(2) ]],
+//                                                    constant float4x4 & orthographicMatrix [[ buffer(3) ]],
                                                     texture2d<float, access::sample> colorTexture [[ texture(0) ]],
                                                     sampler colorSampler [[ sampler(0) ]],
                                                     texture2d<float, access::sample> compositingMaskTexture [[ texture(1) ]],
@@ -54,9 +86,12 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     textureCoordinate = modify_source_texture_coordinates(currentColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+//    constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
+//    float4 textureColor = colorTexture.sample(textureSampler, textureCoordinate);
 
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
+//        currentColor = unpremultiply(currentColor);
     }
     if (multilayer_composite_has_mask) {
         float4 maskColor = maskTexture.sample(maskSampler, vertexIn.positionInLayer);
@@ -88,30 +123,72 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     
     float2 location = vertexIn.position.xy / parameters.canvasSize;
     
-    float4 backgroundColor = backgroundTexture.sample(backgroundSampler, location);
-    backgroundColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColor) : backgroundColor;
+//    float4 backgroundColor = backgroundTexture.sample(backgroundSampler, location);
+//    backgroundColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColor) : backgroundColor;
     
-    float4 finalColor = backgroundColor;
+    float4 finalColor = float4(0,0,0,0);
     
     switch (parameters.fillMode) {
         case 0: // normal
         {
             float4 backgroundColorBeforeCurrentSession = backgroundTextureBeforeCurrentSession.sample(backgroundSamplerBeforeCurrentSession, location);
             backgroundColorBeforeCurrentSession = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColorBeforeCurrentSession) : backgroundColorBeforeCurrentSession;
+
+            float4 sessionColor = reverseNormalBlend(currentColor, backgroundColorBeforeCurrentSession);
+
+//            int count = parameters.sessionVertexCount;
+
+//            float4 overlay = float4(textureColor.rgb, 0);
+//            for (int i = 0; i < count; i++) {
+//                float4 m = sessionVertexes.vertexes[i].position;
+//                float size = sessionVertexes.vertexes[i].size;
+//                Rect rect = { .mid = m, .width = size, .height = size };
+//                if (isInsideRect(vertexIn.position, rect) == false) {
+//                    continue;
+//                }
+//                float2 ratio = float2(float(vertexIn.position.x - (m.x-size*0.5)) / size,
+//                                      float(vertexIn.position.y - (m.y-size*0.5)) / size);
+//                float2 text_coord = transformPointCoord(ratio, 0, float2(0.5));
+//                float4 _color = colorTexture.sample(colorSampler, text_coord);
+//
+//                if (multilayer_composite_content_premultiplied) {
+//                    _color = unpremultiply(_color);
+//                }
+//
+//                overlay.a = min(alpha, overlay.a+_color.a);
+//
+//                if (overlay.a == alpha) {
+//                    break;
+//                }
+//            }
+
+//            sessionColor = normalBlend(sessionColor, overlay);
+//            sessionColor.a = min(alpha, sessionColor.a);
             
-            float4 sessionColor = reverseNormalBlend(backgroundColor, backgroundColorBeforeCurrentSession);
+//            textureColor = float4(textureColor.rgb, 0.5);
             
             float4 blendColor = normalBlend(sessionColor, textureColor);
             blendColor.a = min(alpha, blendColor.a);
-            
+
             finalColor = normalBlend(backgroundColorBeforeCurrentSession, blendColor);
-        
+            
+//            if (textureColor.a <= 0.03) {
+//                textureColor.a = 0;
+//            }
+            
+//            float4 blendColor = normalBlend(sessionColor, textureColor);
+//            blendColor.a = min(alpha, blendColor.a);
+//
+//            finalColor = normalBlend(backgroundColorBeforeCurrentSession, blendColor);
+            
+//            return normalBlend(currentColor,textureColor);
+            
             break;
         }
         case 1: // delete
         {
-            finalColor.rgb = backgroundColor.rgb;
-            finalColor.a = backgroundColor.a * (1-textureColor.a*(1-alpha));
+            finalColor.rgb = currentColor.rgb;
+            finalColor.a = currentColor.a * (1-textureColor.a*(1-alpha));
             
             break;
         }
@@ -119,15 +196,22 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
             break;
     }
     
-    finalColor.a = float(int(floor(finalColor.a * 100))) / 100;
-    
-    if (finalColor.a <= 0.01) {
+//    finalColor.a = float(int(floor(finalColor.a * 100))) / 100;
+
+    if (finalColor.a <= 0.03) {
         finalColor.a = 0;
+    }
+
+    if (finalColor.a >= 0.97) {
+        finalColor.a = 0.97;
+    }
+
+    if (finalColor.a == 0) {
+        finalColor.rgb = 0;
     }
     
     return finalColor;
     
-//    return normalBlend(currentColor,textureColor);
     
 //    float2 location = vertexIn.position.xy / parameters.canvasSize;
 //    float4 backgroundColor = backgroundTexture.sample(backgroundSampler, location);
