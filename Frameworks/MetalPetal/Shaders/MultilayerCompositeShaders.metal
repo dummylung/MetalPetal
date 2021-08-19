@@ -86,13 +86,17 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     textureCoordinate = modify_source_texture_coordinates(currentColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+    
 //    constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
 //    float4 textureColor = colorTexture.sample(textureSampler, textureCoordinate);
-
+    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
 //        currentColor = unpremultiply(currentColor);
     }
+    
+    textureColor = float4(1, 1, 1, textureColor.r);
+    
     if (multilayer_composite_has_mask) {
         float4 maskColor = maskTexture.sample(maskSampler, vertexIn.positionInLayer);
         maskColor = parameters.maskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;

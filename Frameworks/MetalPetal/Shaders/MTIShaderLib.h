@@ -278,8 +278,13 @@ namespace metalpetal {
     METAL_FUNC float4 reverseNormalBlend(float4 Cr, float4 Cb) {
         float4 r = premultiply(Cr);
         float4 d = premultiply(Cb);
-        float sa = (r.a - d.a) / (1 - d.a);
-        sa = max(sa,0.01);
+        float sa;
+        if (d.a == 1) {
+            sa = 0;
+        } else {
+            sa = (r.a - d.a) / (1 - d.a);
+            sa = max(sa,0.01);
+        }
         float sr = r.r - d.r*(1-sa);
         float sg = r.g - d.g*(1-sa);
         float sb = r.b - d.b*(1-sa);
