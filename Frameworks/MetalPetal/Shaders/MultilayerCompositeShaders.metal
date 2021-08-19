@@ -108,7 +108,6 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     }
     if (multilayer_composite_has_tint_color) {
         textureColor.rgb = parameters.tintColor.rgb;
-        textureColor.a *= alpha;
     }
     switch (multilayer_composite_corner_curve_type) {
         case 1:
@@ -120,6 +119,8 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
         default:
             break;
     }
+    
+    textureColor.a *= alpha * parameters.opacity;
     
     float2 location = vertexIn.position.xy / parameters.canvasSize;
     
@@ -167,9 +168,18 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
             
 //            textureColor = float4(textureColor.rgb, 0.5);
             
-            float4 blendColor = normalBlend(sessionColor, textureColor);
-            blendColor.a = min(alpha, blendColor.a);
-
+            float4 blendColor = textureColor;
+            if (sessionColor.a > textureColor.a) {
+                blendColor.a = sessionColor.a;
+            }
+            
+//            float4 blendColor = max(sessionColor.a, textureColor.a);
+//            blendColor.a = min(alpha, blendColor.a);
+            
+//            if (sessionColor.a > 0) {
+//                blendColor.a = min(sessionColor.a, blendColor.a);
+//            }
+            
             finalColor = normalBlend(backgroundColorBeforeCurrentSession, blendColor);
             
 //            if (textureColor.a <= 0.03) {
@@ -183,12 +193,20 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
             
 //            return normalBlend(currentColor,textureColor);
             
+            if (finalColor.a <= 0.01) {
+                finalColor.a = 0;
+            }
+            
             break;
         }
         case 1: // delete
         {
             finalColor.rgb = currentColor.rgb;
             finalColor.a = currentColor.a * (1-textureColor.a*(1-alpha));
+
+            if (finalColor.a <= 0.03) {
+                finalColor.a = 0;
+            }
             
             break;
         }
@@ -197,10 +215,6 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     }
     
 //    finalColor.a = float(int(floor(finalColor.a * 100))) / 100;
-
-    if (finalColor.a <= 0.03) {
-        finalColor.a = 0;
-    }
 
     if (finalColor.a >= 0.97) {
         finalColor.a = 0.97;
