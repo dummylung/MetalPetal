@@ -97,7 +97,12 @@ namespace metalpetal {
         float2 textureCoordinate;
         float2 positionInLayer;
     } MTIMultilayerCompositingLayerVertexOut;
-    
+
+    typedef struct {
+        float4 currentColor [[color(0)]];
+        float4 sessionColor [[color(1)]];
+    } MTIMultilayerCompositingLayerFragmentOut;
+
     // GLSL mod func for metal
     template <typename T, typename _E = typename enable_if<is_floating_point<typename make_scalar<T>::type>::value>::type>
     METAL_FUNC T mod(T x, T y) {
@@ -275,21 +280,29 @@ namespace metalpetal {
         return unpremultiply(src + dst * (1.0 - src.a));
     }
 
-    METAL_FUNC float4 reverseNormalBlend(float4 Cr, float4 Cb) {
-        float4 r = premultiply(Cr);
-        float4 d = premultiply(Cb);
-        float sa;
-        if (d.a == 1) {
-            sa = 0;
-        } else {
-            sa = (r.a - d.a) / (1 - d.a);
-            sa = max(sa,0.01);
-        }
-        float sr = r.r - d.r*(1-sa);
-        float sg = r.g - d.g*(1-sa);
-        float sb = r.b - d.b*(1-sa);
-        return unpremultiply(float4(sr, sg, sb, sa));
-    }
+//    METAL_FUNC float4 reverseNormalBlend(float4 Cr, float4 Cb) {
+//        float4 r = premultiply(Cr); // result (current color)
+//        float4 d = premultiply(Cb); // destination (before session)
+//        float sa; // session
+////        if (d.a > 0.999) {
+//////            d.a = 0.5;
+//////            sa = (r.a - d.a) / (1 - d.a);
+//////            sa = max(sa,0.00001);
+////            if (r.a > 0.9) {
+////                sa = 0.01;
+////            } else {
+////                sa = 1;
+////            }
+////            return float4(0, 0, 0, -1);
+////        } else {
+//            sa = (r.a - d.a) / (1 - d.a);
+//            sa = max(sa,0.00001);
+////        }
+//        float sr = r.r - d.r*(1-sa);
+//        float sg = r.g - d.g*(1-sa);
+//        float sb = r.b - d.b*(1-sa);
+//        return unpremultiply(float4(sr, sg, sb, sa));
+//    }
     
     METAL_FUNC float4 blendBaseAlpha(float4 Cb, float4 Cs, float4 B) {
         float4 Cr = float4((1 - Cb.a) * Cs.rgb + Cb.a * saturate(B.rgb), Cs.a);

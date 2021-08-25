@@ -7,7 +7,10 @@
 
 #import "MTIMultilayerCompositingFilter.h"
 #import "MTIMultilayerCompositeKernel.h"
+#import "MTIBlendFilter.h"
 #import "MTIImage.h"
+#import "MTIRenderPipelineKernel.h"
+
 
 @implementation MTIMultilayerCompositingFilter
 
@@ -37,13 +40,24 @@
     if (_layers.count == 0) {
         return _inputBackgroundImage;
     }
+    
     return [self.class.kernel applyToBackgroundImage:_inputBackgroundImage
-                 backgroundImageBeforeCurrentSession:_inputBackgroundImageBeforeCurrentSession
+                 backgroundImageBeforeCurrentSession:_inputBackgroundImage
                                               layers:_layers
                                    rasterSampleCount:_rasterSampleCount
                                      outputAlphaType:_outputAlphaType
                              outputTextureDimensions:MTITextureDimensionsMake2DFromCGSize(_inputBackgroundImage.size)
                                    outputPixelFormat:_outputPixelFormat];
+    
+//    MTIRenderPipelineKernel *kernel = [MTIBlendFilter kernelWithBlendMode:MTIBlendModeNormal
+//                                                        backdropAlphaType:_inputBackgroundImageBeforeCurrentSession.alphaType
+//                                                          sourceAlphaType:image.alphaType
+//                                                          outputAlphaType:_outputAlphaType];
+//
+//    return [kernel applyToInputImages:@[_inputBackgroundImageBeforeCurrentSession, image]
+//                                      parameters:@{@"intensity": @(1)}
+//                         outputTextureDimensions:MTITextureDimensionsMake2DFromCGSize(_inputBackgroundImage.size)
+//                               outputPixelFormat:_outputPixelFormat];
 }
 
 @end

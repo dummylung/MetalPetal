@@ -73,11 +73,11 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
                                                     texture2d<float, access::sample> compositingMaskTexture [[ texture(1) ]],
                                                     sampler compositingMaskSampler [[ sampler(1) ]],
                                                     texture2d<float, access::sample> maskTexture [[ texture(2) ]],
-                                                    sampler maskSampler [[ sampler(2) ]],
-                                                    texture2d<float, access::sample> backgroundTexture [[ texture(3) ]],
-                                                    sampler backgroundSampler [[ sampler(3) ]],
-                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(4) ]],
-                                                    sampler backgroundSamplerBeforeCurrentSession [[ sampler(4) ]]
+                                                    sampler maskSampler [[ sampler(2) ]]
+//                                                    texture2d<float, access::sample> backgroundTexture [[ texture(3) ]],
+//                                                    sampler backgroundSampler [[ sampler(3) ]],
+//                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(4) ]],
+//                                                    sampler backgroundSamplerBeforeCurrentSession [[ sampler(4) ]]
                                                 ) {
     float alpha = parameters.tintColor.a;
     
@@ -126,7 +126,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     
     textureColor.a *= alpha * parameters.opacity;
     
-    float2 location = vertexIn.position.xy / parameters.canvasSize;
+//    float2 location = vertexIn.position.xy / parameters.canvasSize;
     
 //    float4 backgroundColor = backgroundTexture.sample(backgroundSampler, location);
 //    backgroundColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColor) : backgroundColor;
@@ -136,11 +136,27 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     switch (parameters.fillMode) {
         case 0: // normal
         {
-            float4 backgroundColorBeforeCurrentSession = backgroundTextureBeforeCurrentSession.sample(backgroundSamplerBeforeCurrentSession, location);
-            backgroundColorBeforeCurrentSession = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColorBeforeCurrentSession) : backgroundColorBeforeCurrentSession;
+//            float4 backgroundColorBeforeCurrentSession = backgroundTextureBeforeCurrentSession.sample(backgroundSamplerBeforeCurrentSession, location);
+//            backgroundColorBeforeCurrentSession = unpremultiply(backgroundColorBeforeCurrentSession);
+//
+//            float4 colorOnCurrentSession = reverseNormalBlend(currentColor, backgroundColorBeforeCurrentSession);
+//
+//            float4 newColorToBeBlendToBackground = textureColor;
+//            if (colorOnCurrentSession.a > textureColor.a) { // force not strong enough to make it "darker"
+//                newColorToBeBlendToBackground.a = colorOnCurrentSession.a;
+//            }
+////            textureColor.a = max(sessionColor.a, textureColor.a);
+            
+//            finalColor = normalBlend(backgroundColorBeforeCurrentSession, newColorToBeBlendToBackground);
 
-            float4 sessionColor = reverseNormalBlend(currentColor, backgroundColorBeforeCurrentSession);
-
+            float4 newColorToBeBlendToBackground = textureColor;
+            if (currentColor.a > textureColor.a) { // force not strong enough to make it "darker"
+                newColorToBeBlendToBackground.a = currentColor.a;
+            }
+            finalColor = newColorToBeBlendToBackground;
+            
+            
+            
 //            int count = parameters.sessionVertexCount;
 
 //            float4 overlay = float4(textureColor.rgb, 0);
@@ -172,10 +188,6 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
             
 //            textureColor = float4(textureColor.rgb, 0.5);
             
-            float4 blendColor = textureColor;
-            if (sessionColor.a > textureColor.a) {
-                blendColor.a = sessionColor.a;
-            }
             
 //            float4 blendColor = max(sessionColor.a, textureColor.a);
 //            blendColor.a = min(alpha, blendColor.a);
@@ -183,8 +195,6 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
 //            if (sessionColor.a > 0) {
 //                blendColor.a = min(sessionColor.a, blendColor.a);
 //            }
-            
-            finalColor = normalBlend(backgroundColorBeforeCurrentSession, blendColor);
             
 //            if (textureColor.a <= 0.03) {
 //                textureColor.a = 0;
@@ -197,9 +207,9 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
             
 //            return normalBlend(currentColor,textureColor);
             
-            if (finalColor.a <= 0.01) {
-                finalColor.a = 0;
-            }
+//            if (finalColor.a <= 0.01) {
+//                finalColor.a = 0;
+//            }
             
             break;
         }
@@ -220,14 +230,14 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     
 //    finalColor.a = float(int(floor(finalColor.a * 100))) / 100;
 
-    if (finalColor.a >= 0.97) {
-        finalColor.a = 0.97;
-    }
+//    if (finalColor.a >= 0.999) {
+//        finalColor.a = 0.999;
+//    }
+//
+//    if (finalColor.a == 0) {
+//        finalColor.rgb = 1;
+//    }
 
-    if (finalColor.a == 0) {
-        finalColor.rgb = 0;
-    }
-    
     return finalColor;
     
     

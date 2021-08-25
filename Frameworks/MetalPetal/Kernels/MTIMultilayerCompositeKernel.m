@@ -560,11 +560,11 @@ __attribute__((objc_subclassing_restricted))
             [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.mask.content] atIndex:2];
         }
         
-        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImage] atIndex:3];
-        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImage] atIndex:3];
+//        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImage] atIndex:3];
+//        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImage] atIndex:3];
         
-        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
-        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
+//        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
+//        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
         
         //parameters
         MTIMultilayerCompositingLayerShadingParameters parameters;
