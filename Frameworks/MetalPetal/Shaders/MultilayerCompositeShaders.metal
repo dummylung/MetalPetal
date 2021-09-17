@@ -213,7 +213,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
             
             break;
         }
-        case 1: // delete
+        case 1: // substract
         {
             finalColor.rgb = currentColor.rgb;
             finalColor.a = currentColor.a * (1-textureColor.a*(1-alpha));

@@ -23,7 +23,7 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic, strong, nullable) MTIImage *inputBackgroundImage;
 
-@property (nonatomic, strong, nullable) MTIImage *inputBackgroundImageBeforeCurrentSession;
+//@property (nonatomic, strong, nullable) MTIImage *inputBackgroundImageBeforeCurrentSession;
 
 @property (nonatomic, copy) NSArray<MTILayer *> *layers;
 

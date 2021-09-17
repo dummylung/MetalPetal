@@ -34,7 +34,7 @@ typedef NS_OPTIONS(NSUInteger, MTILayerFlipOptions) {
 
 typedef NS_ENUM(NSInteger, MTILayerFillMode) {
     MTILayerFillModeNormal,
-    MTILayerFillModeDelete
+    MTILayerFillModeSubstract
 } NS_SWIFT_NAME(MTILayer.FillMode);
 
 
