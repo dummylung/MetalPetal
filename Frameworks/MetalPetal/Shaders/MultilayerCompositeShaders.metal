@@ -104,7 +104,9 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
         textureColor.a *= parameters.maskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
     }
     if (multilayer_composite_has_compositing_mask) {
-        float2 location = vertexIn.position.xy / parameters.canvasSize;
+//        float2 location = vertexIn.position.xy / parameters.canvasSize;
+        float scale = parameters.compositingMaskScale * 100 * 5;
+        float2 location = float2(((int)vertexIn.position.x*100 % (int)(scale*100)/100.0) / scale, ((int)vertexIn.position.y*100 % (int)(scale*100)/100.0) / scale);
         float4 maskColor = compositingMaskTexture.sample(compositingMaskSampler, location);
         maskColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
         float maskValue = maskColor[parameters.compositingMaskComponent];

@@ -573,6 +573,11 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskComponent = (int)layer.compositingMask.component;
         parameters.compositingMaskUsesOneMinusValue = layer.compositingMask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.compositingMaskHasPremultipliedAlpha = layer.compositingMask.content.alphaType == MTIAlphaTypePremultiplied;
+        parameters.compositingMaskScale = layer.compositingMask.scale;
+        parameters.compositingMaskDepth1 = layer.compositingMask.depth1;
+        parameters.compositingMaskBlendMode1 = (int)layer.compositingMask.blendMode1;
+        parameters.compositingMaskDepth2 = layer.compositingMask.depth2;
+        parameters.compositingMaskBlendMode2 = (int)layer.compositingMask.blendMode2;
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.maskHasPremultipliedAlpha = layer.mask.content.alphaType == MTIAlphaTypePremultiplied;
@@ -880,12 +885,26 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
         if (compositingMask) {
             MTIImage *newCompositingMaskContent = dependencies[pointer];
             pointer += 1;
-            newCompositingMask = [[MTIMask alloc] initWithContent:newCompositingMaskContent component:compositingMask.component mode:compositingMask.mode];
+            newCompositingMask = [[MTIMask alloc] initWithContent:newCompositingMaskContent
+                                                        component:compositingMask.component
+                                                             mode:compositingMask.mode
+                                                            scale:compositingMask.scale
+                                                           depth1:compositingMask.depth1
+                                                       blendMode1:compositingMask.blendMode1
+                                                           depth2:compositingMask.depth2
+                                                       blendMode2:compositingMask.blendMode2];
         }
         if (mask) {
             MTIImage *newMaskContent = dependencies[pointer];
             pointer += 1;
-            newMask = [[MTIMask alloc] initWithContent:newMaskContent component:mask.component mode:mask.mode];
+            newMask = [[MTIMask alloc] initWithContent:newMaskContent
+                                             component:mask.component
+                                                  mode:mask.mode
+                                                 scale:mask.scale
+                                                depth1:mask.depth1
+                                            blendMode1:mask.blendMode1
+                                                depth2:mask.depth2
+                                            blendMode2:mask.blendMode2];
         }
         MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode fillMode:layer.fillMode];
         [newLayers addObject:newLayer];

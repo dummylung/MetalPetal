@@ -51,6 +51,11 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     int compositingMaskComponent;
     bool compositingMaskHasPremultipliedAlpha;
     bool compositingMaskUsesOneMinusValue;
+    float compositingMaskScale;
+    float compositingMaskDepth1;
+    int compositingMaskBlendMode1;
+    float compositingMaskDepth2;
+    int compositingMaskBlendMode2;
     
     vector_float4 tintColor;
     vector_float4 cornerRadius;
