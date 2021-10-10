@@ -575,8 +575,10 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskHasPremultipliedAlpha = layer.compositingMask.content.alphaType == MTIAlphaTypePremultiplied;
         parameters.compositingMaskScale = layer.compositingMask.scale;
         parameters.compositingMaskDepth1 = layer.compositingMask.depth1;
+        parameters.compositingMaskDepth1Inverted = layer.compositingMask.depth1Inverted;
         parameters.compositingMaskBlendMode1 = (int)layer.compositingMask.blendMode1;
         parameters.compositingMaskDepth2 = layer.compositingMask.depth2;
+        parameters.compositingMaskDepth2Inverted = layer.compositingMask.depth2Inverted;
         parameters.compositingMaskBlendMode2 = (int)layer.compositingMask.blendMode2;
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;
@@ -890,8 +892,10 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                                              mode:compositingMask.mode
                                                             scale:compositingMask.scale
                                                            depth1:compositingMask.depth1
+                                                   depth1Inverted:compositingMask.depth1Inverted
                                                        blendMode1:compositingMask.blendMode1
                                                            depth2:compositingMask.depth2
+                                                   depth2Inverted:compositingMask.depth2Inverted
                                                        blendMode2:compositingMask.blendMode2];
         }
         if (mask) {
@@ -902,8 +906,10 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                                   mode:mask.mode
                                                  scale:mask.scale
                                                 depth1:mask.depth1
+                                        depth1Inverted:mask.depth1Inverted
                                             blendMode1:mask.blendMode1
                                                 depth2:mask.depth2
+                                        depth2Inverted:mask.depth2Inverted
                                             blendMode2:mask.blendMode2];
         }
         MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode fillMode:layer.fillMode];

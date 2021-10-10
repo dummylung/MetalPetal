@@ -23,20 +23,38 @@ typedef NS_ENUM(NSInteger, MTIMaskMode) {
 };
 
 typedef CF_ENUM (NSInteger, MTIMaskBlendMode) {
-    MTIMaskBlendModeNone = 0,
-    MTIMaskBlendModeMultiply,
+    MTIMaskBlendModeNormal = 0,
+    
     MTIMaskBlendModeDarken,
-    MTIMaskBlendModeColourBurn,
+    MTIMaskBlendModeMultiply,
+    MTIMaskBlendModeColorBurn,
     MTIMaskBlendModeLinearBurn,
+    MTIMaskBlendModeDarkerColor,
+    
     MTIMaskBlendModeLighten,
-    MTIMaskBlendModeColourDodge,
+    MTIMaskBlendModeScreen,
+    MTIMaskBlendModeColorDodge,
+    MTIMaskBlendModeLinearDodge,
+    MTIMaskBlendModeLighterColor,
+    
     MTIMaskBlendModeOverlay,
+    MTIMaskBlendModeSoftLight,
+    MTIMaskBlendModeHardLight,
+    MTIMaskBlendModeVividLight,
+    MTIMaskBlendModeLinearLight,
+    MTIMaskBlendModePinLight,
     MTIMaskBlendModeHardMix,
+    
+    MTIMaskBlendModeAdd,
     MTIMaskBlendModeDifference,
+    MTIMaskBlendModeExclusion,
     MTIMaskBlendModeSubtract,
     MTIMaskBlendModeDivide,
-    MTIMaskBlendModeHeight,
-    MTIMaskBlendModeLinearHeight
+    
+    MTIMaskBlendModeHue,
+    MTIMaskBlendModeSaturation,
+    MTIMaskBlendModeColor,
+    MTIMaskBlendModeLuminosity
 };
 
 __attribute__((objc_subclassing_restricted))
@@ -50,8 +68,10 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic, readonly) CGFloat scale;
 @property (nonatomic, readonly) CGFloat depth1;
+@property (nonatomic, readonly) BOOL depth1Inverted;
 @property (nonatomic, readonly) MTIMaskBlendMode blendMode1;
 @property (nonatomic, readonly) CGFloat depth2;
+@property (nonatomic, readonly) BOOL depth2Inverted;
 @property (nonatomic, readonly) MTIMaskBlendMode blendMode2;
 @property (nonatomic, readonly) CGFloat brightness;
 @property (nonatomic, readonly) CGFloat contrast;
@@ -60,7 +80,7 @@ __attribute__((objc_subclassing_restricted))
 
 + (instancetype)new NS_UNAVAILABLE;
 
-- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode scale:(CGFloat)scale depth1:(CGFloat)depth1 blendMode1:(MTIMaskBlendMode)blendMode1 depth2:(CGFloat)depth2 blendMode2:(MTIMaskBlendMode)blendMode2 NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode scale:(CGFloat)scale depth1:(CGFloat)depth1 depth1Inverted:(BOOL)depth1Inverted blendMode1:(MTIMaskBlendMode)blendMode1 depth2:(CGFloat)depth2 depth2Inverted:(BOOL)depth2Inverted blendMode2:(MTIMaskBlendMode)blendMode2 NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)initWithContent:(MTIImage *)content;
 
