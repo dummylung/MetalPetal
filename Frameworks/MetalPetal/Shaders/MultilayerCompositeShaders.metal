@@ -206,6 +206,10 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
             
 //            finalColor = normalBlend(backgroundColorBeforeCurrentSession, newColorToBeBlendToBackground);
             
+            if (textureColor.a > 0) {
+                textureColor.a = min(1.0, textureColor.a + parameters.shapeCount * 0.02);
+            }
+            
             float4 newColorToBeBlendToBackground = textureColor;
             if (currentColor.a > textureColor.a) { // force not strong enough to make it "darker"
                 newColorToBeBlendToBackground.a = currentColor.a;

@@ -59,6 +59,8 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     bool compositingMaskDepth2Inverted;
     int compositingMaskBlendMode2;
     
+    int shapeCount;
+    
     vector_float4 tintColor;
     vector_float4 cornerRadius;
     

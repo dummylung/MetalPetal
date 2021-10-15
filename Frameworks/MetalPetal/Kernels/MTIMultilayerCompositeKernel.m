@@ -586,6 +586,10 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskDepth2Inverted = layer.compositingMask.depth2Inverted;
         parameters.compositingMaskBlendMode2 = (int)layer.compositingMask.blendMode2;
         
+        double val = ((double)arc4random() / UINT32_MAX);
+        CGFloat percent = MIN(1-layer.shape.countJitter*val, 0.99);
+        parameters.shapeCount = (int)(layer.shape.count * percent + 1);
+        
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.maskHasPremultipliedAlpha = layer.mask.content.alphaType == MTIAlphaTypePremultiplied;
