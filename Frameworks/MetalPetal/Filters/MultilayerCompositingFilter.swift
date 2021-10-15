@@ -13,7 +13,7 @@ import Metal
 import MetalPetalObjectiveC.Core
 #endif
 
-extension MTILayer.FlipOptions: Hashable {
+extension MTIShape.FlipOptions: Hashable {
     
 }
 
@@ -48,8 +48,6 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var contentRegion: CGRect
         
-        public var contentFlipOptions: MTILayer.FlipOptions = []
-        
         public var mask: MTIMask? = nil
         
         public var compositingMask: MTIMask? = nil
@@ -74,12 +72,15 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var fillMode: MTILayer.FillMode = .normal
         
+        public var shape: MTIShape
+        
         public init(content: MTIImage) {
             self.content = content
             self.contentRegion = content.extent
             self.layoutUnit = .pixel
             self.size = content.size
             self.position = CGPoint(x: content.size.width/2, y: content.size.height/2)
+            self.shape = MTIShape()
         }
         
         public func hash(into hasher: inout Hasher) {
@@ -88,7 +89,6 @@ public class MultilayerCompositingFilter: MTIFilter {
             hasher.combine(contentRegion.origin.y)
             hasher.combine(contentRegion.size.width)
             hasher.combine(contentRegion.size.height)
-            hasher.combine(contentFlipOptions)
             hasher.combine(mask)
             hasher.combine(compositingMask)
             hasher.combine(layoutUnit)
@@ -103,6 +103,7 @@ public class MultilayerCompositingFilter: MTIFilter {
             hasher.combine(tintColor)
             hasher.combine(blendMode)
             hasher.combine(fillMode)
+            hasher.combine(shape)
         }
         
         private func mutating(_ block: (inout Layer) -> Void) -> Layer {
@@ -125,10 +126,6 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public func contentRegion(_ contentRegion: CGRect) -> Layer {
             self.mutating({ $0.contentRegion = contentRegion })
-        }
-        
-        public func contentFlipOptions(_ contentFlipOptions: MTILayer.FlipOptions) -> Layer {
-            self.mutating({ $0.contentFlipOptions = contentFlipOptions })
         }
         
         public func mask(_ mask: MTIMask?) -> Layer {
@@ -250,7 +247,7 @@ extension MultilayerCompositingFilter {
 
 extension MultilayerCompositingFilter.Layer {
     fileprivate func bridgeToObjectiveC() -> MTILayer {
-        return MTILayer(content: self.content, contentRegion: self.contentRegion, contentFlipOptions: self.contentFlipOptions, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, fillMode: self.fillMode)
+        return MTILayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, fillMode: self.fillMode, shape: self.shape)
     }
 }
 

@@ -10,10 +10,12 @@
 #import <MetalPetal/MTIBlendModes.h>
 #import <MetalPetal/MTIColor.h>
 #import <MetalPetal/MTICorner.h>
+#import <MetalPetal/MTIShape.h>
 #else
 #import "MTIBlendModes.h"
 #import "MTIColor.h"
 #import "MTICorner.h"
+#import "MTIShape.h"
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
@@ -24,12 +26,6 @@ typedef NS_CLOSED_ENUM(NSInteger, MTILayerLayoutUnit) {
     MTILayerLayoutUnitPixel,
     MTILayerLayoutUnitFractionOfBackgroundSize
 } NS_SWIFT_NAME(MTILayer.LayoutUnit);
-
-typedef NS_OPTIONS(NSUInteger, MTILayerFlipOptions) {
-    MTILayerFlipOptionsDonotFlip = 0,
-    MTILayerFlipOptionsFlipVertically = 1 << 0,
-    MTILayerFlipOptionsFlipHorizontally = 1 << 1,
-} NS_SWIFT_NAME(MTILayer.FlipOptions);
 
 
 typedef NS_ENUM(NSInteger, MTILayerFillMode) {
@@ -45,8 +41,6 @@ __attribute__((objc_subclassing_restricted))
 @property (nonatomic, strong, readonly) MTIImage *content;
 
 @property (nonatomic, readonly) CGRect contentRegion; //pixel
-
-@property (nonatomic, readonly) MTILayerFlipOptions contentFlipOptions;
 
 /// A mask that applies to the `content` of the layer. This mask is resized and aligned with the layer.
 @property (nonatomic, strong, readonly, nullable) MTIMask *mask;
@@ -75,20 +69,22 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic, readonly) MTILayerFillMode fillMode;
 
+@property (nonatomic, readonly) MTIShape *shape;
+
 - (instancetype)init NS_UNAVAILABLE;
 + (instancetype)new NS_UNAVAILABLE;
 
-- (instancetype)initWithContent:(MTIImage *)content layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
+//- (instancetype)initWithContent:(MTIImage *)content layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
+//
+//- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
+//
+//- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
+//
+//- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
+//
+//- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
-
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
-
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
-
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
-
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode fillMode:(MTILayerFillMode)fillMode NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape NS_DESIGNATED_INITIALIZER;
 
 - (CGSize)sizeInPixelForBackgroundSize:(CGSize)backgroundSize;
 

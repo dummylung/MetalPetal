@@ -372,7 +372,7 @@ __attribute__((objc_subclassing_restricted))
 @synthesize dependencies = _dependencies;
 @synthesize alphaType = _alphaType;
 
-- (void)drawVerticesForRect:(CGRect)rect contentRegion:(CGRect)contentRegion flipOptions:(MTILayerFlipOptions)flipOptions commandEncoder:(id<MTLRenderCommandEncoder>)commandEncoder {
+- (void)drawVerticesForRect:(CGRect)rect contentRegion:(CGRect)contentRegion flipOptions:(MTIShapeFlipOptions)flipOptions commandEncoder:(id<MTLRenderCommandEncoder>)commandEncoder {
     CGFloat l = CGRectGetMinX(rect);
     CGFloat r = CGRectGetMaxX(rect);
     CGFloat t = CGRectGetMinY(rect);
@@ -383,12 +383,12 @@ __attribute__((objc_subclassing_restricted))
     CGFloat contentT = CGRectGetMaxY(contentRegion);
     CGFloat contentB = CGRectGetMinY(contentRegion);
     
-    if (flipOptions & MTILayerFlipOptionsFlipVertically) {
+    if (flipOptions & MTIShapeFlipOptionsFlipVertically) {
         CGFloat temp = contentT;
         contentT = contentB;
         contentB = temp;
     }
-    if (flipOptions & MTILayerFlipOptionsFlipHorizontally) {
+    if (flipOptions & MTIShapeFlipOptionsFlipHorizontally) {
         CGFloat temp = contentL;
         contentL = contentR;
         contentR = temp;
@@ -570,6 +570,11 @@ __attribute__((objc_subclassing_restricted))
         MTIMultilayerCompositingLayerShadingParameters parameters;
         parameters.canvasSize = simd_make_float2(backgroundImageSize.width, backgroundImageSize.height);
         parameters.opacity = layer.opacity;
+        parameters.tintColor = MTIColorToFloat4(layer.tintColor);
+        parameters.layerSize = simd_make_float2(layerPixelSize.width, layerPixelSize.height);
+        parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
+        parameters.fillMode = (int)layer.fillMode;
+        
         parameters.compositingMaskComponent = (int)layer.compositingMask.component;
         parameters.compositingMaskUsesOneMinusValue = layer.compositingMask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.compositingMaskHasPremultipliedAlpha = layer.compositingMask.content.alphaType == MTIAlphaTypePremultiplied;
@@ -580,18 +585,16 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskDepth2 = layer.compositingMask.depth2;
         parameters.compositingMaskDepth2Inverted = layer.compositingMask.depth2Inverted;
         parameters.compositingMaskBlendMode2 = (int)layer.compositingMask.blendMode2;
+        
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.maskHasPremultipliedAlpha = layer.mask.content.alphaType == MTIAlphaTypePremultiplied;
-        parameters.tintColor = MTIColorToFloat4(layer.tintColor);
-        parameters.layerSize = simd_make_float2(layerPixelSize.width, layerPixelSize.height);
-        parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
-        parameters.fillMode = (int)layer.fillMode;
+        
         [commandEncoder setFragmentBytes:&parameters length:sizeof(parameters) atIndex:0];
         
         [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
                     contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width, layer.contentRegion.origin.y/layer.content.size.height, layer.contentRegion.size.width/layer.content.size.width, layer.contentRegion.size.height/layer.content.size.height)
-                      flipOptions:layer.contentFlipOptions
+                      flipOptions:layer.shape.flipOptions
                    commandEncoder:commandEncoder];
     }
     
@@ -786,7 +789,7 @@ __attribute__((objc_subclassing_restricted))
         
         [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
                     contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width, layer.contentRegion.origin.y/layer.content.size.height, layer.contentRegion.size.width/layer.content.size.width, layer.contentRegion.size.height/layer.content.size.height)
-                      flipOptions:layer.contentFlipOptions
+                      flipOptions:layer.shape.flipOptions
                    commandEncoder:commandEncoder];
     }
     
@@ -912,7 +915,7 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                         depth2Inverted:mask.depth2Inverted
                                             blendMode2:mask.blendMode2];
         }
-        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode fillMode:layer.fillMode];
+        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode fillMode:layer.fillMode shape:layer.shape];
         [newLayers addObject:newLayer];
     }
     return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage backgroundImageBeforeCurrentSession:backgroundImageBeforeCurrentSession layers:newLayers rasterSampleCount:_rasterSampleCount outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
