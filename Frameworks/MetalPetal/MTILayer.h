@@ -11,16 +11,18 @@
 #import <MetalPetal/MTIColor.h>
 #import <MetalPetal/MTICorner.h>
 #import <MetalPetal/MTIShape.h>
+#import <MetalPetal/MTIMaterialMask.h>
 #else
 #import "MTIBlendModes.h"
 #import "MTIColor.h"
 #import "MTICorner.h"
 #import "MTIShape.h"
+#import "MTIMaterialMask.h"
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class MTIImage, MTIMask;
+@class MTIImage, MTIMask, MTIMaterialMask;
 
 typedef NS_CLOSED_ENUM(NSInteger, MTILayerLayoutUnit) {
     MTILayerLayoutUnitPixel,
@@ -47,6 +49,8 @@ __attribute__((objc_subclassing_restricted))
 
 /// A mask that applies to the `content` of the layer. This mask is resized and aligned with the background.
 @property (nonatomic, strong, readonly, nullable) MTIMask *compositingMask;
+
+@property (nonatomic, strong, readonly, nullable) MTIMaterialMask *materialMask;
 
 @property (nonatomic, readonly) MTILayerLayoutUnit layoutUnit;
 
@@ -84,7 +88,7 @@ __attribute__((objc_subclassing_restricted))
 //
 //- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask materialMask:(nullable MTIMaterialMask *)materialMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape NS_DESIGNATED_INITIALIZER;
 
 - (CGSize)sizeInPixelForBackgroundSize:(CGSize)backgroundSize;
 

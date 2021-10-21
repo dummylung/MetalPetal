@@ -21,6 +21,7 @@ namespace metalpetal {
     constant bool multilayer_composite_content_premultiplied [[function_constant(1028)]];
     constant bool multilayer_composite_has_mask [[function_constant(1029)]];
     constant bool multilayer_composite_has_compositing_mask [[function_constant(1030)]];
+    constant bool multilayer_composite_has_material_mask [[function_constant(1038)]];
     constant bool multilayer_composite_has_tint_color [[function_constant(1031)]];
     constant short multilayer_composite_corner_curve_type [[function_constant(1037)]];
 

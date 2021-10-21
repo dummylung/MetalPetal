@@ -59,7 +59,7 @@
     
     MTIMask *mask = self.inputMask;
     if (!mask) {
-        mask = [[MTIMask alloc] initWithContent:MTIImage.whiteImage component:MTIColorComponentRed mode:MTIMaskModeNormal scale:1.0 depth1:1.0 depth1Inverted:false blendMode1:MTIMaskBlendModeMultiply depth2:0.0 depth2Inverted:false blendMode2:MTIMaskBlendModeNormal];
+        mask = [[MTIMask alloc] initWithContent:MTIImage.whiteImage component:MTIColorComponentRed mode:MTIMaskModeNormal scale:1.0 depth:1.0 blendMode:MTIMaskBlendModeMultiply];
     }
     
     MTIVector * deltas[3];

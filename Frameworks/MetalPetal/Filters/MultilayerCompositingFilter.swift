@@ -52,6 +52,8 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var compositingMask: MTIMask? = nil
         
+        public var materialMask: MTIMaterialMask? = nil
+        
         public var layoutUnit: MTILayer.LayoutUnit
         
         public var position: CGPoint
@@ -91,6 +93,7 @@ public class MultilayerCompositingFilter: MTIFilter {
             hasher.combine(contentRegion.size.height)
             hasher.combine(mask)
             hasher.combine(compositingMask)
+            hasher.combine(materialMask)
             hasher.combine(layoutUnit)
             hasher.combine(position.x)
             hasher.combine(position.y)
@@ -134,6 +137,10 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public func compositingMask(_ mask: MTIMask?) -> Layer {
             self.mutating({ $0.compositingMask = mask })
+        }
+        
+        public func materialMask(_ mask: MTIMaterialMask?) -> Layer {
+            self.mutating({ $0.materialMask = mask })
         }
         
         public func frame(_ rect: CGRect, layoutUnit: MTILayer.LayoutUnit) -> Layer {
@@ -247,7 +254,7 @@ extension MultilayerCompositingFilter {
 
 extension MultilayerCompositingFilter.Layer {
     fileprivate func bridgeToObjectiveC() -> MTILayer {
-        return MTILayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, fillMode: self.fillMode, shape: self.shape)
+        return MTILayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, materialMask: self.materialMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, fillMode: self.fillMode, shape: self.shape)
     }
 }
 

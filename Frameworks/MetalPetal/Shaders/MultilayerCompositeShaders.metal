@@ -113,7 +113,9 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                                                                     texture2d<float, access::sample> compositingMaskTexture [[ texture(1) ]],
                                                                     sampler compositingMaskSampler [[ sampler(1) ]],
                                                                     texture2d<float, access::sample> maskTexture [[ texture(2) ]],
-                                                                    sampler maskSampler [[ sampler(2) ]]
+                                                                    sampler maskSampler [[ sampler(2) ]],
+                                                                    texture2d<float, access::sample> materialMaskTexture [[ texture(3) ]],
+                                                                    sampler materialMaskSampler [[ sampler(3) ]]
 //                                                                    texture2d<float, access::sample> backgroundTexture [[ texture(3) ]],
 //                                                                    sampler backgroundSampler [[ sampler(3) ]],
 //                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(4) ]],
@@ -137,10 +139,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
     }
     
     textureColor = float4(1, 1, 1, textureColor.r);
-                                                    
-    if (multilayer_composite_has_tint_color) {
-        textureColor.rgb = parameters.tintColor.rgb;
-    }
+       
     if (multilayer_composite_has_mask) {
         float4 maskColor = maskTexture.sample(maskSampler, vertexIn.positionInLayer);
         maskColor = parameters.maskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
@@ -155,19 +154,29 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         float4 maskColor = compositingMaskTexture.sample(compositingMaskSampler, location);
         maskColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
         
-//        float maskValue = maskColor[parameters.compositingMaskComponent];
+        float maskValue = maskColor[parameters.compositingMaskComponent];
+        textureColor.a *= parameters.compositingMaskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
+    }
+    
+    if (multilayer_composite_has_tint_color) {
+        textureColor.rgb = parameters.tintColor.rgb;
+    }
+    
+    if (multilayer_composite_has_material_mask) {
+        float scale = parameters.materialMaskScale * 100 * 5;
+        float2 location = float2(((int)vertexIn.position.x*100 % (int)(scale*100)/100.0) / scale, ((int)vertexIn.position.y*100 % (int)(scale*100)/100.0) / scale);
+        float4 maskColor = materialMaskTexture.sample(materialMaskSampler, location);
+        maskColor = parameters.materialMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
         
         float3 textureColorHSL = rgb2hsl(textureColor.rgb);
         float lightness = textureColorHSL.b;
-        
-        float depth1Value = lightness * parameters.compositingMaskDepth1;
-        float depth2Value = lightness * parameters.compositingMaskDepth2;
-        
-        maskColor = blend(parameters.compositingMaskBlendMode1, maskColor, float4(textureColor.rgb, parameters.compositingMaskDepth1Inverted ? 1-depth1Value : depth1Value));
-        maskColor = blend(parameters.compositingMaskBlendMode2, maskColor, float4(textureColor.rgb, parameters.compositingMaskDepth2Inverted ? 1-depth2Value : depth2Value));
+
+        float depth1Value = lightness * parameters.materialMaskDepth1;
+        float depth2Value = lightness * parameters.materialMaskDepth2;
+
+        maskColor = blend(parameters.materialMaskBlendMode1, maskColor, float4(textureColor.rgb, parameters.materialMaskDepth1Inverted ? 1-depth1Value : depth1Value));
+        maskColor = blend(parameters.materialMaskBlendMode2, maskColor, float4(textureColor.rgb, parameters.materialMaskDepth2Inverted ? 1-depth2Value : depth2Value));
         textureColor.rgb = maskColor.rgb;
-        
-//        textureColor.a *= parameters.compositingMaskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
     }
     
     switch (multilayer_composite_corner_curve_type) {

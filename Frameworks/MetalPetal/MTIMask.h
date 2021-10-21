@@ -67,20 +67,14 @@ __attribute__((objc_subclassing_restricted))
 @property (nonatomic, readonly) MTIMaskMode mode;
 
 @property (nonatomic, readonly) CGFloat scale;
-@property (nonatomic, readonly) CGFloat depth1;
-@property (nonatomic, readonly) BOOL depth1Inverted;
-@property (nonatomic, readonly) MTIMaskBlendMode blendMode1;
-@property (nonatomic, readonly) CGFloat depth2;
-@property (nonatomic, readonly) BOOL depth2Inverted;
-@property (nonatomic, readonly) MTIMaskBlendMode blendMode2;
-@property (nonatomic, readonly) CGFloat brightness;
-@property (nonatomic, readonly) CGFloat contrast;
+@property (nonatomic, readonly) CGFloat depth;
+@property (nonatomic, readonly) MTIMaskBlendMode blendMode;
 
 - (instancetype)init NS_UNAVAILABLE;
 
 + (instancetype)new NS_UNAVAILABLE;
 
-- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode scale:(CGFloat)scale depth1:(CGFloat)depth1 depth1Inverted:(BOOL)depth1Inverted blendMode1:(MTIMaskBlendMode)blendMode1 depth2:(CGFloat)depth2 depth2Inverted:(BOOL)depth2Inverted blendMode2:(MTIMaskBlendMode)blendMode2 NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode scale:(CGFloat)scale depth:(CGFloat)depth blendMode:(MTIMaskBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)initWithContent:(MTIImage *)content;
 

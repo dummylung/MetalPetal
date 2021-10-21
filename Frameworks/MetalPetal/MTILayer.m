@@ -83,12 +83,13 @@
 //                        fillMode:MTILayerFillModeNormal];
 //}
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(MTIMask *)mask compositingMask:(MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(nonnull MTIBlendMode)blendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape {
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(MTIMask *)mask compositingMask:(MTIMask *)compositingMask materialMask:(MTIMaterialMask *)materialMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(nonnull MTIBlendMode)blendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape {
     if (self = [super init]) {
         _content = content;
         _contentRegion = contentRegion;
         _mask = mask;
         _compositingMask = compositingMask;
+        _materialMask = materialMask;
         _layoutUnit = layoutUnit;
         _position = position;
         _size = size;
