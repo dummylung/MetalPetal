@@ -148,12 +148,16 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
     }
                                                     
     if (multilayer_composite_has_compositing_mask) {
+        constexpr sampler compositingMaskSampler(mag_filter::linear, min_filter::linear);
 //        float2 location = vertexIn.position.xy / parameters.canvasSize;
         float scale = parameters.compositingMaskScale * 100 * 5;
-        float2 location = float2(((int)vertexIn.position.x*100 % (int)(scale*100)/100.0) / scale, ((int)vertexIn.position.y*100 % (int)(scale*100)/100.0) / scale);
+        float w = materialMaskTexture.get_width();
+        float h = materialMaskTexture.get_height();
+        float2 location = float2(((int)vertexIn.position.x*1000 % (int)(scale*1000)/1000.0) / scale * (w-1)/w,
+                                 ((int)vertexIn.position.y*1000 % (int)(scale*1000)/1000.0) / scale * (h-1)/h);
         float4 maskColor = compositingMaskTexture.sample(compositingMaskSampler, location);
         maskColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
-        
+
         float maskValue = maskColor[parameters.compositingMaskComponent];
         textureColor.a *= parameters.compositingMaskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
     }
@@ -163,8 +167,12 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
     }
     
     if (multilayer_composite_has_material_mask) {
+        constexpr sampler materialMaskSampler(mag_filter::linear, min_filter::linear);
         float scale = parameters.materialMaskScale * 100 * 5;
-        float2 location = float2(((int)vertexIn.position.x*100 % (int)(scale*100)/100.0) / scale, ((int)vertexIn.position.y*100 % (int)(scale*100)/100.0) / scale);
+        float w = materialMaskTexture.get_width();
+        float h = materialMaskTexture.get_height();
+        float2 location = float2(((int)vertexIn.position.x*1000 % (int)(scale*1000)/1000.0) / scale * (w-1)/w,
+                                 ((int)vertexIn.position.y*1000 % (int)(scale*1000)/1000.0) / scale * (h-1)/h);
         float4 maskColor = materialMaskTexture.sample(materialMaskSampler, location);
         maskColor = parameters.materialMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
         
