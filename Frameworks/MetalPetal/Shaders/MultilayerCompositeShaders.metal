@@ -157,9 +157,16 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                                  ((int)vertexIn.position.y*1000 % (int)(scale*1000)/1000.0) / scale * (h-1)/h);
         float4 maskColor = compositingMaskTexture.sample(compositingMaskSampler, location);
         maskColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
-
+        
+        maskColor = blend(parameters.compositingMaskBlendMode, maskColor, maskColor);
+        
         float maskValue = maskColor[parameters.compositingMaskComponent];
-        textureColor.a *= parameters.compositingMaskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
+        maskValue = parameters.compositingMaskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
+        
+        float depthValue = parameters.compositingMaskDepth;
+        maskValue = 1-(maskValue * depthValue);
+        
+        textureColor.a *= maskValue;
     }
     
     if (multilayer_composite_has_tint_color) {
