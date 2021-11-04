@@ -26,25 +26,19 @@ typedef NS_OPTIONS(NSUInteger, MTIShapeFlipOptions) {
 __attribute__((objc_subclassing_restricted))
 @interface MTIShape : NSObject <NSCopying>
 
-@property (nonatomic, readonly) CGFloat scatter;
 @property (nonatomic, readonly) CGFloat rotation;
 @property (nonatomic, readonly) int count;
 @property (nonatomic, readonly) CGFloat countJitter;
-@property (nonatomic, readonly) BOOL randomised;
-@property (nonatomic, readonly) BOOL azimuth;
 @property (nonatomic, readonly) MTIShapeFlipOptions flipOptions;
 
 - (instancetype)init;
 
 + (instancetype)new NS_UNAVAILABLE;
 
-- (instancetype)initWithScatter:(CGFloat)scatter
-                       rotation:(CGFloat)rotation
-                          count:(int)count
-                    countJitter:(CGFloat)countJitter
-                     randomised:(BOOL)randomised
-                        azimuth:(BOOL)azimuth
-                    flipOptions:(MTIShapeFlipOptions)flipOptions NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithRotation:(CGFloat)rotation
+                           count:(int)count
+                     countJitter:(CGFloat)countJitter
+                     flipOptions:(MTIShapeFlipOptions)flipOptions NS_DESIGNATED_INITIALIZER;
 
 @end
 
