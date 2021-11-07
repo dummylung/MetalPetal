@@ -189,12 +189,16 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         float depth1Value = lightness * parameters.materialMaskDepth1;
         float depth2Value = lightness * parameters.materialMaskDepth2;
         
+        maskColor.a *= parameters.materialMaskDepth;
+        
         float4 blendColor = maskColor;
         blendColor = blend(parameters.materialMaskBlendMode1, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth1Inverted ? 1-depth1Value : depth1Value));
         blendColor = blend(parameters.materialMaskBlendMode2, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth2Inverted ? 1-depth2Value : depth2Value));
         textureColor.rgb = blendColor.rgb;
         
-        textureColor.a *= maskColor.a; // solution for transparent image
+        if (maskColor.a < 0.01) {
+            textureColor.a *= maskColor.a; // solution for transparent image
+        }
     }
     
     switch (multilayer_composite_corner_curve_type) {
@@ -237,11 +241,11 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                 textureColor.a = min(1.0, textureColor.a + (parameters.shapeCount-1) * 0.02);
             }
             
-            float4 newColorToBeBlendToBackground = textureColor;
-            if (currentColor.a > textureColor.a) { // force not strong enough to make it "darker"
-                newColorToBeBlendToBackground.a = currentColor.a;
-            }
-            finalColor = newColorToBeBlendToBackground;
+//            float4 newColorToBeBlendToBackground = textureColor;
+//            if (currentColor.a > textureColor.a) { // force not strong enough to make it "darker"
+//                newColorToBeBlendToBackground = currentColor;
+//            }
+            finalColor = currentColor.a > textureColor.a ? currentColor : textureColor;
             
 //            int count = parameters.sessionVertexCount;
 

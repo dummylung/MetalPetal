@@ -597,6 +597,7 @@ __attribute__((objc_subclassing_restricted))
         parameters.materialMaskUsesOneMinusValue = layer.materialMask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.materialMaskHasPremultipliedAlpha = layer.materialMask.content.alphaType == MTIAlphaTypePremultiplied;
         parameters.materialMaskScale = layer.materialMask.scale;
+        parameters.materialMaskDepth = layer.materialMask.depth;
         parameters.materialMaskDepth1 = layer.materialMask.depth1;
         parameters.materialMaskDepth1Inverted = layer.materialMask.depth1Inverted;
         parameters.materialMaskBlendMode1 = (int)layer.materialMask.blendMode1;
@@ -941,6 +942,7 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                                              component:materialMask.component
                                                                   mode:materialMask.mode
                                                                  scale:materialMask.scale
+                                                                 depth:materialMask.depth
                                                                 depth1:materialMask.depth1
                                                         depth1Inverted:materialMask.depth1Inverted
                                                             blendMode1:materialMask.blendMode1

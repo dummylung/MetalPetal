@@ -59,6 +59,7 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     bool materialMaskHasPremultipliedAlpha;
     bool materialMaskUsesOneMinusValue;
     float materialMaskScale;
+    float materialMaskDepth;
     float materialMaskDepth1;
     bool materialMaskDepth1Inverted;
     int materialMaskBlendMode1;
