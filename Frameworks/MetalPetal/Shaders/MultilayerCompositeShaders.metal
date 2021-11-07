@@ -233,8 +233,8 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
             
 //            finalColor = normalBlend(backgroundColorBeforeCurrentSession, newColorToBeBlendToBackground);
             
-            if (textureColor.a > 0) {
-                textureColor.a = min(1.0, textureColor.a + parameters.shapeCount * 0.02);
+            if (textureColor.a > 0.02 && parameters.shapeCount > 1) {
+                textureColor.a = min(1.0, textureColor.a + (parameters.shapeCount-1) * 0.02);
             }
             
             float4 newColorToBeBlendToBackground = textureColor;
