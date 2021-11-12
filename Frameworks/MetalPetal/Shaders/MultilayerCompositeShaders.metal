@@ -189,12 +189,14 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         float depth1Value = lightness * parameters.materialMaskDepth1;
         float depth2Value = lightness * parameters.materialMaskDepth2;
         
-        maskColor.a *= parameters.materialMaskDepth;
-        
-        float4 blendColor = maskColor;
-        blendColor = blend(parameters.materialMaskBlendMode1, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth1Inverted ? 1-depth1Value : depth1Value));
-        blendColor = blend(parameters.materialMaskBlendMode2, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth2Inverted ? 1-depth2Value : depth2Value));
-        textureColor.rgb = blendColor.rgb;
+        if (parameters.materialMaskDepth >= 0.01) {
+            maskColor.a *= parameters.materialMaskDepth;
+            
+            float4 blendColor = maskColor;
+            blendColor = blend(parameters.materialMaskBlendMode1, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth1Inverted ? 1-depth1Value : depth1Value));
+            blendColor = blend(parameters.materialMaskBlendMode2, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth2Inverted ? 1-depth2Value : depth2Value));
+            textureColor.rgb = blendColor.rgb;
+        }
         
         if (maskColor.a < 0.01) {
             textureColor.a *= maskColor.a; // solution for transparent image
