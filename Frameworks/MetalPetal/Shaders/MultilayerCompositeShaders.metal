@@ -146,7 +146,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         float maskValue = maskColor[parameters.maskComponent];
         textureColor.a *= parameters.maskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
     }
-                                                    
+    
     if (multilayer_composite_has_compositing_mask) {
         constexpr sampler compositingMaskSampler(mag_filter::linear, min_filter::linear);
 //        float2 location = vertexIn.position.xy / parameters.canvasSize;

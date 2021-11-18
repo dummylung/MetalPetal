@@ -11,6 +11,7 @@
 #import <MetalPetal/MTIColor.h>
 #else
 #import "MTIColor.h"
+#import "MTIBlendModes.h"
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
@@ -20,41 +21,6 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSInteger, MTIMaskMode) {
     MTIMaskModeNormal = 0,
     MTIMaskModeOneMinusMaskValue
-};
-
-typedef CF_ENUM (NSInteger, MTIMaskBlendMode) {
-    MTIMaskBlendModeNormal = 0,
-    
-    MTIMaskBlendModeDarken,
-    MTIMaskBlendModeMultiply,
-    MTIMaskBlendModeColorBurn,
-    MTIMaskBlendModeLinearBurn,
-    MTIMaskBlendModeDarkerColor,
-    
-    MTIMaskBlendModeLighten,
-    MTIMaskBlendModeScreen,
-    MTIMaskBlendModeColorDodge,
-    MTIMaskBlendModeLinearDodge,
-    MTIMaskBlendModeLighterColor,
-    
-    MTIMaskBlendModeOverlay,
-    MTIMaskBlendModeSoftLight,
-    MTIMaskBlendModeHardLight,
-    MTIMaskBlendModeVividLight,
-    MTIMaskBlendModeLinearLight,
-    MTIMaskBlendModePinLight,
-    MTIMaskBlendModeHardMix,
-    
-    MTIMaskBlendModeAdd,
-    MTIMaskBlendModeDifference,
-    MTIMaskBlendModeExclusion,
-    MTIMaskBlendModeSubtract,
-    MTIMaskBlendModeDivide,
-    
-    MTIMaskBlendModeHue,
-    MTIMaskBlendModeSaturation,
-    MTIMaskBlendModeColor,
-    MTIMaskBlendModeLuminosity
 };
 
 __attribute__((objc_subclassing_restricted))
@@ -68,13 +34,13 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic, readonly) CGFloat scale;
 @property (nonatomic, readonly) CGFloat depth;
-@property (nonatomic, readonly) MTIMaskBlendMode blendMode;
+@property (nonatomic, readonly) MTIBlendMode blendMode;
 
 - (instancetype)init NS_UNAVAILABLE;
 
 + (instancetype)new NS_UNAVAILABLE;
 
-- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode scale:(CGFloat)scale depth:(CGFloat)depth blendMode:(MTIMaskBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode scale:(CGFloat)scale depth:(CGFloat)depth blendMode:(MTIBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)initWithContent:(MTIImage *)content;
 

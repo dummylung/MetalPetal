@@ -577,6 +577,8 @@ __attribute__((objc_subclassing_restricted))
 //        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
 //        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
         
+        NSArray *allModes = MTIBlendModes.allModes;
+        
         //parameters
         MTIMultilayerCompositingLayerShadingParameters parameters;
         parameters.canvasSize = simd_make_float2(backgroundImageSize.width, backgroundImageSize.height);
@@ -591,7 +593,7 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskHasPremultipliedAlpha = layer.compositingMask.content.alphaType == MTIAlphaTypePremultiplied;
         parameters.compositingMaskScale = layer.compositingMask.scale;
         parameters.compositingMaskDepth = layer.compositingMask.depth;
-        parameters.compositingMaskBlendMode = (int)layer.compositingMask.blendMode;
+        parameters.compositingMaskBlendMode = (int)[allModes indexOfObject:layer.compositingMask.blendMode];
         
         parameters.materialMaskComponent = (int)layer.materialMask.component;
         parameters.materialMaskUsesOneMinusValue = layer.materialMask.mode == MTIMaskModeOneMinusMaskValue;
@@ -600,10 +602,10 @@ __attribute__((objc_subclassing_restricted))
         parameters.materialMaskDepth = layer.materialMask.depth;
         parameters.materialMaskDepth1 = layer.materialMask.depth1;
         parameters.materialMaskDepth1Inverted = layer.materialMask.depth1Inverted;
-        parameters.materialMaskBlendMode1 = (int)layer.materialMask.blendMode1;
+        parameters.materialMaskBlendMode1 = (int)[allModes indexOfObject:layer.materialMask.blendMode1];
         parameters.materialMaskDepth2 = layer.materialMask.depth2;
         parameters.materialMaskDepth2Inverted = layer.materialMask.depth2Inverted;
-        parameters.materialMaskBlendMode2 = (int)layer.materialMask.blendMode2;
+        parameters.materialMaskBlendMode2 = (int)[allModes indexOfObject:layer.materialMask.blendMode2];
         
         double val = ((double)arc4random() / UINT32_MAX);
         CGFloat percent = MIN(1-layer.shape.countJitter*val, 0.99);
