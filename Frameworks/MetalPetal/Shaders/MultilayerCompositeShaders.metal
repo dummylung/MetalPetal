@@ -138,8 +138,12 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
     }
     
     textureColor = float4(1, 1, 1, textureColor.r);
-       
-    if (multilayer_composite_has_mask) {
+    
+    if (multilayer_composite_has_tint_color) {
+        textureColor.rgb = parameters.tintColor.rgb;
+    }
+    
+    if (multilayer_composite_has_mask && textureColor.a > 0) {
         constexpr sampler maskSampler(mag_filter::linear, min_filter::linear);
         float4 maskColor = maskTexture.sample(maskSampler, vertexIn.positionInLayer);
         maskColor = parameters.maskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
@@ -147,7 +151,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         textureColor.a *= parameters.maskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
     }
     
-    if (multilayer_composite_has_compositing_mask) {
+    if (multilayer_composite_has_compositing_mask && textureColor.a > 0) {
         constexpr sampler compositingMaskSampler(mag_filter::linear, min_filter::linear);
 //        float2 location = vertexIn.position.xy / parameters.canvasSize;
         float scale = parameters.compositingMaskScale;
@@ -169,11 +173,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         textureColor.a *= maskValue;
     }
     
-    if (multilayer_composite_has_tint_color) {
-        textureColor.rgb = parameters.tintColor.rgb;
-    }
-    
-    if (multilayer_composite_has_material_mask) {
+    if (multilayer_composite_has_material_mask && textureColor.a > 0) {
         constexpr sampler materialMaskSampler(mag_filter::linear, min_filter::linear);
         float scale = parameters.materialMaskScale;
         float x = vertexIn.position.x / (materialMaskTexture.get_width() * scale);
@@ -219,12 +219,13 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //            break;
 //    }
     
-    textureColor.a *= alpha * parameters.opacity;
-    
 //    float2 location = vertexIn.position.xy / parameters.canvasSize;
     
 //    float4 backgroundColor = backgroundTexture.sample(backgroundSampler, location);
 //    backgroundColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(backgroundColor) : backgroundColor;
+    if (textureColor.a > 0) {
+        textureColor.a *= alpha * parameters.opacity;
+    }
     
     float4 finalColor = float4(0,0,0,0);
     
