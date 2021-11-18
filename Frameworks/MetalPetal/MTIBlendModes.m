@@ -84,34 +84,7 @@ static id<NSLocking> _registeredBlendModesLock;
 + (void)initialize {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        NSArray<MTIBlendMode> *builtinModes = @[MTIBlendModeNormal,
-                                                MTIBlendModeDarken,
-                                                MTIBlendModeMultiply,
-                                                MTIBlendModeColorBurn,
-                                                MTIBlendModeLinearBurn,
-                                                MTIBlendModeDarkerColor,
-                                                MTIBlendModeLighten,
-                                                MTIBlendModeScreen,
-                                                MTIBlendModeColorDodge,
-                                                MTIBlendModeAdd,
-                                                MTIBlendModeLighterColor,
-                                                MTIBlendModeOverlay,
-                                                MTIBlendModeHardMix,
-                                                MTIBlendModeSoftLight,
-                                                MTIBlendModeHardLight,
-                                                MTIBlendModeLinearLight,
-                                                MTIBlendModeVividLight,
-                                                MTIBlendModePinLight,
-                                                MTIBlendModeDifference,
-                                                MTIBlendModeExclusion,
-                                                MTIBlendModeSubtract,
-                                                MTIBlendModeDivide,
-                                                MTIBlendModeHue,
-                                                MTIBlendModeColor,
-                                                MTIBlendModeSaturation,
-                                                MTIBlendModeLuminosity,
-                                                MTIBlendModeColorLookup512x512
-                                                ];
+        NSArray<MTIBlendMode> *builtinModes = [self allCases];
         NSMutableDictionary *modes = [NSMutableDictionary dictionary];
         for (MTIBlendMode mode in builtinModes) {
             NSString *fragmentFunctionNameForBlendFilter = [[mode stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:[mode substringWithRange:NSMakeRange(0, 1)].lowercaseString] stringByAppendingString:@"Blend"];
@@ -126,6 +99,37 @@ static id<NSLocking> _registeredBlendModesLock;
         _registeredBlendModes = [modes copy];
         _registeredBlendModesLock = MTILockCreate();
     });
+}
+
++ (NSArray<MTIBlendMode> *)allCases {
+    return @[MTIBlendModeNormal,
+             MTIBlendModeDarken,
+             MTIBlendModeMultiply,
+             MTIBlendModeColorBurn,
+             MTIBlendModeLinearBurn,
+             MTIBlendModeDarkerColor,
+             MTIBlendModeLighten,
+             MTIBlendModeScreen,
+             MTIBlendModeColorDodge,
+             MTIBlendModeLighterColor,
+             MTIBlendModeOverlay,
+             MTIBlendModeSoftLight,
+             MTIBlendModeHardLight,
+             MTIBlendModeLinearLight,
+             MTIBlendModeVividLight,
+             MTIBlendModePinLight,
+             MTIBlendModeHardMix,
+             MTIBlendModeAdd,
+             MTIBlendModeDifference,
+             MTIBlendModeExclusion,
+             MTIBlendModeSubtract,
+             MTIBlendModeDivide,
+             MTIBlendModeHue,
+             MTIBlendModeColor,
+             MTIBlendModeSaturation,
+             MTIBlendModeLuminosity,
+//             MTIBlendModeColorLookup512x512
+    ];
 }
 
 + (NSArray<MTIBlendMode> *)allModes {

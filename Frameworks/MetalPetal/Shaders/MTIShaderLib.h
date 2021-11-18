@@ -334,7 +334,7 @@ namespace metalpetal {
     
     // overlay
     METAL_FUNC float overlayBlendSingleChannel(float b, float s ) {
-        return b < 0.5f ? (2 * s * b) : (1 - 2 * (1 - b) * (1 - s));
+        return b < 0.5 ? (2 * s * b) : (1 - 2 * (1 - b) * (1 - s));
     }
     
     METAL_FUNC float4 overlayBlend(float4 Cb, float4 Cs) {

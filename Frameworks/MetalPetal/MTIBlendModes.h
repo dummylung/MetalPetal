@@ -103,6 +103,7 @@ __attribute__((objc_subclassing_restricted))
 
 + (instancetype)new NS_UNAVAILABLE;
 
+@property (nonatomic,copy,readonly,class) NSArray<MTIBlendMode> *allCases NS_SWIFT_NAME(allCases);
 @property (nonatomic,copy,readonly,class) NSArray<MTIBlendMode> *allModes NS_SWIFT_NAME(all);
 
 + (void)registerBlendMode:(MTIBlendMode)blendMode withFunctionDescriptors:(MTIBlendFunctionDescriptors *)functionDescriptors;

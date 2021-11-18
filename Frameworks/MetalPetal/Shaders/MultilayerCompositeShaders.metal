@@ -62,44 +62,43 @@ float2 transformPointCoord(float2 pointCoord, float a, float2 anchor) {
 }
 
 float4 blend(int mode, float4 Cb, float4 Cs) {
-    float4 color = Cb;
     switch (mode) {
-        case 0: color = normalBlend(Cb, Cs); break;
+        case 0: return normalBlend(Cb, Cs);
             
-        case 1: color = darkenBlend(Cb, Cs); break;
-        case 2: color = multiplyBlend(Cb, Cs); break;
-        case 3: color = colorBurnBlend(Cb, Cs); break;
-        case 4: color = linearBurnBlend(Cb, Cs); break;
-        case 5: color = darkerColorBlend(Cb, Cs); break;
+        case 1: return darkenBlend(Cb, Cs);
+        case 2: return multiplyBlend(Cb, Cs);
+        case 3: return colorBurnBlend(Cb, Cs);
+        case 4: return linearBurnBlend(Cb, Cs);
+        case 5: return darkerColorBlend(Cb, Cs);
             
-        case 6: color = lightenBlend(Cb, Cs); break;
-        case 7: color = screenBlend(Cb, Cs); break;
-        case 8: color = colorDodgeBlend(Cb, Cs); break;
-        case 9: color = linearDodgeBlend(Cb, Cs); break;
-        case 10: color = lighterColorBlend(Cb, Cs); break;
+        case 6: return lightenBlend(Cb, Cs);
+        case 7: return screenBlend(Cb, Cs);
+        case 8: return colorDodgeBlend(Cb, Cs);
+//        case 9: return linearDodgeBlend(Cb, Cs);
+        case 9: return lighterColorBlend(Cb, Cs);
             
-        case 11: color = overlayBlend(Cb, Cs); break;
-        case 12: color = softLightBlend(Cb, Cs); break;
-        case 13: color = hardLightBlend(Cb, Cs); break;
-        case 14: color = vividLightBlend(Cb, Cs); break;
-        case 15: color = linearLightBlend(Cb, Cs); break;
-        case 16: color = pinLightBlend(Cb, Cs); break;
-        case 17: color = hardMixBlend(Cb, Cs); break;
+        case 10: return overlayBlend(Cb, Cs);
+        case 11: return softLightBlend(Cb, Cs);
+        case 12: return hardLightBlend(Cb, Cs);
+        case 13: return vividLightBlend(Cb, Cs);
+        case 14: return linearLightBlend(Cb, Cs);
+        case 15: return pinLightBlend(Cb, Cs);
+        case 16: return hardMixBlend(Cb, Cs);
         
-        case 18: color = addBlend(Cb, Cs); break;
-        case 19: color = differenceBlend(Cb, Cs); break;
-        case 20: color = exclusionBlend(Cb, Cs); break;
-        case 21: color = subtractBlend(Cb, Cs); break;
-        case 22: color = divideBlend(Cb, Cs); break;
+        case 17: return addBlend(Cb, Cs);
+        case 18: return differenceBlend(Cb, Cs);
+        case 19: return exclusionBlend(Cb, Cs);
+        case 20: return subtractBlend(Cb, Cs);
+        case 21: return divideBlend(Cb, Cs);
         
-        case 23: color = hueBlend(Cb, Cs); break;
-        case 24: color = saturationBlend(Cb, Cs); break;
-        case 25: color = colorBlend(Cb, Cs); break;
-        case 26: color = luminosityBlend(Cb, Cs); break;
+        case 22: return hueBlend(Cb, Cs);
+        case 23: return saturationBlend(Cb, Cs);
+        case 24: return colorBlend(Cb, Cs);
+        case 25: return luminosityBlend(Cb, Cs);
             
         default: break;
     }
-    return color;
+    return Cb;
 }
 
 fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilayerCompositingLayerVertexOut vertexIn [[ stage_in ]],
@@ -111,11 +110,11 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                                                                     texture2d<float, access::sample> colorTexture [[ texture(0) ]],
                                                                     sampler colorSampler [[ sampler(0) ]],
                                                                     texture2d<float, access::sample> compositingMaskTexture [[ texture(1) ]],
-                                                                    sampler compositingMaskSampler [[ sampler(1) ]],
+//                                                                    sampler compositingMaskSampler [[ sampler(1) ]],
                                                                     texture2d<float, access::sample> maskTexture [[ texture(2) ]],
-                                                                    sampler maskSampler [[ sampler(2) ]],
-                                                                    texture2d<float, access::sample> materialMaskTexture [[ texture(3) ]],
-                                                                    sampler materialMaskSampler [[ sampler(3) ]]
+//                                                                    sampler maskSampler [[ sampler(2) ]],
+                                                                    texture2d<float, access::sample> materialMaskTexture [[ texture(3) ]]
+//                                                                    sampler materialMaskSampler [[ sampler(3) ]]
 //                                                                    texture2d<float, access::sample> backgroundTexture [[ texture(3) ]],
 //                                                                    sampler backgroundSampler [[ sampler(3) ]],
 //                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(4) ]],
@@ -141,6 +140,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
     textureColor = float4(1, 1, 1, textureColor.r);
        
     if (multilayer_composite_has_mask) {
+        constexpr sampler maskSampler(mag_filter::linear, min_filter::linear);
         float4 maskColor = maskTexture.sample(maskSampler, vertexIn.positionInLayer);
         maskColor = parameters.maskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
         float maskValue = maskColor[parameters.maskComponent];
@@ -151,13 +151,13 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         constexpr sampler compositingMaskSampler(mag_filter::linear, min_filter::linear);
 //        float2 location = vertexIn.position.xy / parameters.canvasSize;
         float scale = parameters.compositingMaskScale;
-        float w = compositingMaskTexture.get_width() * scale;
-        float h = compositingMaskTexture.get_height() * scale;
-        float2 location = float2((((int)vertexIn.position.x*1000 % (int)(w*1000)) / 1000.0) / w,
-                                 (((int)vertexIn.position.y*1000 % (int)(h*1000)) / 1000.0) / h);
-        float4 maskColor = compositingMaskTexture.sample(compositingMaskSampler, location);
+        float x = vertexIn.position.x / (compositingMaskTexture.get_width() * scale);
+        float y = vertexIn.position.y / (compositingMaskTexture.get_height() * scale);
+        x = x - (int)x;
+        y = y - (int)y;
+        float4 maskColor = compositingMaskTexture.sample(compositingMaskSampler, float2(x, y));
         maskColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
-        
+
         maskColor = blend(parameters.compositingMaskBlendMode, maskColor, maskColor);
         
         float maskValue = maskColor[parameters.compositingMaskComponent];
@@ -176,26 +176,31 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
     if (multilayer_composite_has_material_mask) {
         constexpr sampler materialMaskSampler(mag_filter::linear, min_filter::linear);
         float scale = parameters.materialMaskScale;
-        float w = materialMaskTexture.get_width() * scale;
-        float h = materialMaskTexture.get_height() * scale;
-        float2 location = float2((((int)vertexIn.position.x*1000 % (int)(w*1000)) / 1000.0) / w,
-                                 (((int)vertexIn.position.y*1000 % (int)(h*1000)) / 1000.0) / h);
-        float4 maskColor = materialMaskTexture.sample(materialMaskSampler, location);
+        float x = vertexIn.position.x / (materialMaskTexture.get_width() * scale);
+        float y = vertexIn.position.y / (materialMaskTexture.get_height() * scale);
+        x = x - (int)x;
+        y = y - (int)y;
+        float4 maskColor = materialMaskTexture.sample(materialMaskSampler, float2(x, y));
         maskColor = parameters.materialMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
         
-        float3 textureColorHSL = rgb2hsl(textureColor.rgb);
-        float lightness = textureColorHSL.b;
-
-        float depth1Value = lightness * parameters.materialMaskDepth1;
-        float depth2Value = lightness * parameters.materialMaskDepth2;
-        
         if (parameters.materialMaskDepth >= 0.01) {
+            
             maskColor.a *= parameters.materialMaskDepth;
             
-            float4 blendColor = maskColor;
-            blendColor = blend(parameters.materialMaskBlendMode1, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth1Inverted ? 1-depth1Value : depth1Value));
-            blendColor = blend(parameters.materialMaskBlendMode2, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth2Inverted ? 1-depth2Value : depth2Value));
-            textureColor.rgb = blendColor.rgb;
+            if (maskColor.a >= 0.01) {
+                float3 textureColorHSL = rgb2hsl(textureColor.rgb);
+                float lightness = textureColorHSL.b;
+
+                float depth1Value = lightness * parameters.materialMaskDepth1;
+                float depth2Value = lightness * parameters.materialMaskDepth2;
+                
+                float4 blendColor = maskColor;
+                int blendMode1 = parameters.materialMaskBlendMode1;
+                int blendMode2 = parameters.materialMaskBlendMode2;
+                blendColor = blend(blendMode1, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth1Inverted ? 1-depth1Value : depth1Value));
+                blendColor = blend(blendMode2, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth2Inverted ? 1-depth2Value : depth2Value));
+                textureColor.rgb = blendColor.rgb;
+            }
         }
         
         if (maskColor.a < 0.01) {
@@ -203,16 +208,16 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         }
     }
     
-    switch (multilayer_composite_corner_curve_type) {
-        case 1:
-            textureColor.a *= circularCornerMask(parameters.layerSize, vertexIn.positionInLayer, parameters.cornerRadius);
-            break;
-        case 2:
-            textureColor.a *= continuousCornerMask(parameters.layerSize, vertexIn.positionInLayer, parameters.cornerRadius);
-            break;
-        default:
-            break;
-    }
+//    switch (multilayer_composite_corner_curve_type) {
+//        case 1:
+//            textureColor.a *= circularCornerMask(parameters.layerSize, vertexIn.positionInLayer, parameters.cornerRadius);
+//            break;
+//        case 2:
+//            textureColor.a *= continuousCornerMask(parameters.layerSize, vertexIn.positionInLayer, parameters.cornerRadius);
+//            break;
+//        default:
+//            break;
+//    }
     
     textureColor.a *= alpha * parameters.opacity;
     
