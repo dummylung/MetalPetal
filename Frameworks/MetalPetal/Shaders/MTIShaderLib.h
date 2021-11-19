@@ -44,6 +44,10 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     
     float opacity;
     
+    int shapeComponent;
+    bool shapeUsesOneMinusValue;
+    int shapeCount;
+    
     int maskComponent;
     bool maskHasPremultipliedAlpha;
     bool maskUsesOneMinusValue;
@@ -66,8 +70,6 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     float materialMaskDepth2;
     bool materialMaskDepth2Inverted;
     int materialMaskBlendMode2;
-    
-    int shapeCount;
     
     vector_float4 tintColor;
     vector_float4 cornerRadius;

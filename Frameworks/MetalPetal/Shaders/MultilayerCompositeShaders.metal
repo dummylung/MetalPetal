@@ -137,6 +137,8 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //        currentColor = unpremultiply(currentColor);
     }
     
+    float textureValue = textureColor[parameters.shapeComponent];
+    textureColor.r *= parameters.shapeUsesOneMinusValue ? (1.0 - textureValue) : textureValue;
     textureColor = float4(1, 1, 1, textureColor.r);
     
     if (multilayer_composite_has_tint_color) {
@@ -183,11 +185,15 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         float4 maskColor = materialMaskTexture.sample(materialMaskSampler, float2(x, y));
         maskColor = parameters.materialMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
         
+        if (parameters.materialMaskUsesOneMinusValue) {
+            maskColor = float4(1.0-maskColor.r,1.0-maskColor.g,1.0-maskColor.b,maskColor.a);
+        }
+        
         if (parameters.materialMaskDepth >= 0.01) {
             
             maskColor.a *= parameters.materialMaskDepth;
             
-            if (maskColor.a >= 0.01) {
+            if (maskColor.a >= 0) {
                 float3 textureColorHSL = rgb2hsl(textureColor.rgb);
                 float lightness = textureColorHSL.b;
 

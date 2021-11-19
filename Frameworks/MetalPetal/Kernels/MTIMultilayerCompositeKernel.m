@@ -611,6 +611,9 @@ __attribute__((objc_subclassing_restricted))
         CGFloat percent = MIN(1-layer.shape.countJitter*val, 0.99);
         parameters.shapeCount = (int)(layer.shape.count * percent + 1);
         
+        parameters.shapeComponent = (int)layer.shape.component;
+        parameters.shapeUsesOneMinusValue = layer.shape.mode == MTIMaskModeOneMinusMaskValue;
+        
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.maskHasPremultipliedAlpha = layer.mask.content.alphaType == MTIAlphaTypePremultiplied;

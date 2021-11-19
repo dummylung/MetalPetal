@@ -11,6 +11,7 @@
 #import <MetalPetal/MTIColor.h>
 #else
 #import "MTIColor.h"
+#import "MTIMask.h"
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
@@ -26,6 +27,8 @@ typedef NS_OPTIONS(NSUInteger, MTIShapeFlipOptions) {
 __attribute__((objc_subclassing_restricted))
 @interface MTIShape : NSObject <NSCopying>
 
+@property (nonatomic, readonly) MTIColorComponent component;
+@property (nonatomic, readonly) MTIMaskMode mode;
 @property (nonatomic, readonly) CGFloat rotation;
 @property (nonatomic, readonly) int count;
 @property (nonatomic, readonly) CGFloat countJitter;
@@ -35,7 +38,9 @@ __attribute__((objc_subclassing_restricted))
 
 + (instancetype)new NS_UNAVAILABLE;
 
-- (instancetype)initWithRotation:(CGFloat)rotation
+- (instancetype)initWithComponent:(MTIColorComponent)component
+                             mode:(MTIMaskMode)mode
+                         rotation:(CGFloat)rotation
                            count:(int)count
                      countJitter:(CGFloat)countJitter
                      flipOptions:(MTIShapeFlipOptions)flipOptions NS_DESIGNATED_INITIALIZER;
