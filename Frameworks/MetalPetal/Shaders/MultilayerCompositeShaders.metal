@@ -137,23 +137,15 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //        currentColor = unpremultiply(currentColor);
     }
     
-    float textureValue = textureColor[parameters.shapeComponent];
-    textureColor.r *= parameters.shapeUsesOneMinusValue ? (1.0 - textureValue) : textureValue;
-    textureColor = float4(1, 1, 1, textureColor.r);
+//    if (multilayer_composite_has_mask && textureColor.a > 0) {
+//        constexpr sampler maskSampler(mag_filter::linear, min_filter::linear);
+//        float4 maskColor = maskTexture.sample(maskSampler, vertexIn.positionInLayer);
+//        maskColor = parameters.maskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
+//        float maskValue = maskColor[parameters.maskComponent];
+//        textureColor.a *= parameters.maskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
+//    }
     
-    if (multilayer_composite_has_tint_color) {
-        textureColor.rgb = parameters.tintColor.rgb;
-    }
-    
-    if (multilayer_composite_has_mask && textureColor.a > 0) {
-        constexpr sampler maskSampler(mag_filter::linear, min_filter::linear);
-        float4 maskColor = maskTexture.sample(maskSampler, vertexIn.positionInLayer);
-        maskColor = parameters.maskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
-        float maskValue = maskColor[parameters.maskComponent];
-        textureColor.a *= parameters.maskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
-    }
-    
-    if (multilayer_composite_has_compositing_mask && textureColor.a > 0) {
+    if (multilayer_composite_has_compositing_mask && textureColor[parameters.shapeComponent] > 0.01) {
         constexpr sampler compositingMaskSampler(mag_filter::linear, min_filter::linear);
 //        float2 location = vertexIn.position.xy / parameters.canvasSize;
         float scale = parameters.compositingMaskScale;
@@ -164,15 +156,26 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         float4 maskColor = compositingMaskTexture.sample(compositingMaskSampler, float2(x, y));
         maskColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
 
-        maskColor = blend(parameters.compositingMaskBlendMode, maskColor, maskColor);
-        
         float maskValue = maskColor[parameters.compositingMaskComponent];
         maskValue = parameters.compositingMaskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
+        maskColor = float4(maskValue, maskValue, maskValue, maskColor.a);
         
-        float depthValue = parameters.compositingMaskDepth;
-        maskValue = 1-(maskValue * depthValue);
+        maskColor.a *= parameters.compositingMaskDepth;
         
-        textureColor.a *= maskValue;
+        maskColor = blend(parameters.compositingMaskBlendMode, textureColor, maskColor);
+        textureColor = maskColor;
+    }
+    
+    float textureValue = textureColor[parameters.shapeComponent];
+    textureValue = parameters.shapeUsesOneMinusValue ? (1.0 - textureValue) : textureValue;
+    textureColor = float4(textureValue, textureValue, textureValue, textureColor.a);
+    
+    textureColor = float4(1, 1, 1, textureColor.r);
+//    textureColor.r *= parameters.shapeUsesOneMinusValue ? (1.0 - textureValue) : textureValue;
+//    textureColor = float4(1, 1, 1, textureColor.r);
+    
+    if (multilayer_composite_has_tint_color) {
+        textureColor.rgb = parameters.tintColor.rgb;
     }
     
     if (multilayer_composite_has_material_mask && textureColor.a > 0) {
