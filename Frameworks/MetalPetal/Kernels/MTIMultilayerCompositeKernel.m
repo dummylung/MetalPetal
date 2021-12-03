@@ -522,6 +522,7 @@ __attribute__((objc_subclassing_restricted))
         
         CGSize layerPixelSize = [layer sizeInPixelForBackgroundSize:backgroundImageSize];
         CGPoint layerPixelPosition = [layer positionInPixelForBackgroundSize:backgroundImageSize];
+        CGPoint layerStartPixelPosition = [layer startPositionInPixelForBackgroundSize:backgroundImageSize];
         
         MTIRenderPipeline *renderPipeline = [kernelState renderPipelineForLayer:layer error:&error];
         if (error) {
@@ -585,15 +586,21 @@ __attribute__((objc_subclassing_restricted))
         parameters.opacity = layer.opacity;
         parameters.tintColor = MTIColorToFloat4(layer.tintColor);
         parameters.layerSize = simd_make_float2(layerPixelSize.width, layerPixelSize.height);
+        parameters.startPosition = simd_make_float2(layerStartPixelPosition.x, layerStartPixelPosition.y);
         parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
         parameters.fillMode = (int)layer.fillMode;
         
         parameters.compositingMaskComponent = (int)layer.compositingMask.component;
         parameters.compositingMaskUsesOneMinusValue = layer.compositingMask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.compositingMaskHasPremultipliedAlpha = layer.compositingMask.content.alphaType == MTIAlphaTypePremultiplied;
-        parameters.compositingMaskScale = layer.compositingMask.scale;
+        parameters.compositingMaskType = (int)layer.compositingMask.type;
+        parameters.compositingMaskMovement = layer.compositingMask.movement;
+        parameters.compositingMaskScale = layer.compositingMask.scale;        
+        parameters.compositingMaskZoom = layer.compositingMask.zoom;
+        parameters.compositingMaskRotation = layer.compositingMask.rotation;
         parameters.compositingMaskDepth = layer.compositingMask.depth;
         parameters.compositingMaskBlendMode = (int)[allCases indexOfObject:layer.compositingMask.blendMode];
+        parameters.compositingOffsetJitter = layer.compositingMask.offsetJitter;
         
         parameters.materialMaskComponent = (int)layer.materialMask.component;
         parameters.materialMaskUsesOneMinusValue = layer.materialMask.mode == MTIMaskModeOneMinusMaskValue;
@@ -926,8 +933,13 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
             newCompositingMask = [[MTIMask alloc] initWithContent:newCompositingMaskContent
                                                         component:compositingMask.component
                                                              mode:compositingMask.mode
+                                                             type:compositingMask.type
+                                                         movement:compositingMask.movement
                                                             scale:compositingMask.scale
+                                                             zoom:compositingMask.zoom
+                                                         rotation:compositingMask.rotation
                                                             depth:compositingMask.depth
+                                                     offsetJitter:compositingMask.offsetJitter
                                                         blendMode:compositingMask.blendMode];
         }
         if (mask) {
@@ -936,8 +948,13 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
             newMask = [[MTIMask alloc] initWithContent:newMaskContent
                                              component:mask.component
                                                   mode:mask.mode
+                                                  type:mask.type
+                                              movement:mask.movement
                                                  scale:mask.scale
+                                                  zoom:mask.zoom
+                                              rotation:mask.rotation
                                                  depth:mask.depth
+                                          offsetJitter:mask.offsetJitter
                                              blendMode:mask.blendMode];
         }
         if (materialMask) {
@@ -955,7 +972,7 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                                         depth2Inverted:materialMask.depth2Inverted
                                                             blendMode2:materialMask.blendMode2];
         }
-        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion mask:newMask compositingMask:newCompositingMask materialMask:newMaterialMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode fillMode:layer.fillMode shape:layer.shape];
+        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion mask:newMask compositingMask:newCompositingMask materialMask:newMaterialMask layoutUnit:layer.layoutUnit position:layer.position startPosition:layer.startPosition size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode fillMode:layer.fillMode shape:layer.shape];
         [newLayers addObject:newLayer];
     }
     return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage backgroundImageBeforeCurrentSession:backgroundImageBeforeCurrentSession layers:newLayers rasterSampleCount:_rasterSampleCount outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];

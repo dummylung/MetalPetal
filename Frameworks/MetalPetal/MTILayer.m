@@ -83,7 +83,7 @@
 //                        fillMode:MTILayerFillModeNormal];
 //}
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(MTIMask *)mask compositingMask:(MTIMask *)compositingMask materialMask:(MTIMaterialMask *)materialMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(nonnull MTIBlendMode)blendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape {
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(MTIMask *)mask compositingMask:(MTIMask *)compositingMask materialMask:(MTIMaterialMask *)materialMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position startPosition:(CGPoint)startPosition size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(nonnull MTIBlendMode)blendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape {
     if (self = [super init]) {
         _content = content;
         _contentRegion = contentRegion;
@@ -92,6 +92,7 @@
         _materialMask = materialMask;
         _layoutUnit = layoutUnit;
         _position = position;
+        _startPosition = startPosition;
         _size = size;
         _rotation = rotation;
         _opacity = opacity;
@@ -126,6 +127,17 @@
             return _position;
         case MTILayerLayoutUnitFractionOfBackgroundSize:
             return CGPointMake(backgroundSize.width * _position.x, backgroundSize.height * _position.y);
+        default:
+            @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:@"Unknown MTILayerLayoutUnit" userInfo:@{@"Unit": @(_layoutUnit)}];
+    }
+}
+
+- (CGPoint)startPositionInPixelForBackgroundSize:(CGSize)backgroundSize {
+    switch (_layoutUnit) {
+        case MTILayerLayoutUnitPixel:
+            return _startPosition;
+        case MTILayerLayoutUnitFractionOfBackgroundSize:
+            return CGPointMake(backgroundSize.width * _startPosition.x, backgroundSize.height * _startPosition.y);
         default:
             @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:@"Unknown MTILayerLayoutUnit" userInfo:@{@"Unit": @(_layoutUnit)}];
     }

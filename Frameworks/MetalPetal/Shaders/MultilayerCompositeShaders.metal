@@ -149,10 +149,69 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         constexpr sampler compositingMaskSampler(mag_filter::linear, min_filter::linear);
 //        float2 location = vertexIn.position.xy / parameters.canvasSize;
         float scale = parameters.compositingMaskScale;
-        float x = vertexIn.position.x / (compositingMaskTexture.get_width() * scale);
-        float y = vertexIn.position.y / (compositingMaskTexture.get_height() * scale);
-        x = x - (int)x;
-        y = y - (int)y;
+        float zoom = parameters.compositingMaskZoom*0.2+1;
+        
+        float x = 0;
+        float y = 0;
+        
+        switch (parameters.compositingMaskType) {
+            case 0: // moving
+            {
+                // scale 0.2 is original size
+//                float s = (scale-0.2)*5+1.0;
+//                x = vertexIn.textureCoordinate.x / s;
+//                y = vertexIn.textureCoordinate.y / s;
+//                x = x - (int)x;
+//                y = y - (int)y;
+                
+                float2 origin = float2(0,0);
+                float2 offset = float2(0,0);
+                if (parameters.compositingOffsetJitter > 0) {
+                    origin = float2(parameters.startPosition.x, parameters.startPosition.y);
+                    offset = parameters.compositingOffsetJitter * parameters.layerSize;
+                }
+                float2 layerPosition = float2(parameters.layerSize.x * vertexIn.textureCoordinate.x, parameters.layerSize.y * vertexIn.textureCoordinate.y);
+                
+                layerPosition = layerPosition + offset;
+                
+                float dx = vertexIn.position.x - layerPosition.x + parameters.layerSize.x*0.5;
+                float dy = vertexIn.position.y - layerPosition.y + parameters.layerSize.y*0.5;
+                
+                dx = dx - origin.x;
+                dy = dy - origin.y;
+                
+                dx = dx * parameters.compositingMaskMovement + layerPosition.x - parameters.layerSize.x*0.5;
+                dy = dy * parameters.compositingMaskMovement + layerPosition.y - parameters.layerSize.y*0.5;
+                
+                if (parameters.compositingMaskRotation != 0) {
+                    float2 r = transformPointCoord(float2(dx,dy),
+                                                   parameters.compositingMaskRotation * M_PI_4_F,
+                                                   float2(parameters.layerSize.x*0.5, parameters.layerSize.y*0.5));
+                    dx = r.x;
+                    dy = r.y;
+                }
+                
+                x = dx / (compositingMaskTexture.get_width() * scale * zoom);
+                y = dy / (compositingMaskTexture.get_height() * scale * zoom);
+                
+                x = x - (int)x;
+                y = y - (int)y;
+                
+                (x < 0) && (x = 1-(-x));
+                (y < 0) && (y = 1-(-y));
+                
+                break;
+            }
+            case 1: // texturised
+            {
+                x = vertexIn.position.x / (compositingMaskTexture.get_width() * scale);
+                y = vertexIn.position.y / (compositingMaskTexture.get_height() * scale);
+                x = x - (int)x;
+                y = y - (int)y;
+                break;
+            }
+        }
+        
         float4 maskColor = compositingMaskTexture.sample(compositingMaskSampler, float2(x, y));
         maskColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
 

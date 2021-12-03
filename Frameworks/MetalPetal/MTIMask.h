@@ -23,6 +23,11 @@ typedef NS_ENUM(NSInteger, MTIMaskMode) {
     MTIMaskModeOneMinusMaskValue
 };
 
+typedef NS_ENUM(NSInteger, MTIMaskType) {
+    MTIMaskTypeMoving = 0,
+    MTIMaskTypeTexturised
+};
+
 __attribute__((objc_subclassing_restricted))
 @interface MTIMask : NSObject <NSCopying>
 
@@ -31,16 +36,20 @@ __attribute__((objc_subclassing_restricted))
 @property (nonatomic, readonly) MTIColorComponent component;
 
 @property (nonatomic, readonly) MTIMaskMode mode;
-
+@property (nonatomic, readonly) MTIMaskType type;
+@property (nonatomic, readonly) CGFloat movement;
 @property (nonatomic, readonly) CGFloat scale;
+@property (nonatomic, readonly) CGFloat zoom;
+@property (nonatomic, readonly) CGFloat rotation;
 @property (nonatomic, readonly) CGFloat depth;
+@property (nonatomic, readonly) CGFloat offsetJitter;
 @property (nonatomic, readonly) MTIBlendMode blendMode;
 
 - (instancetype)init NS_UNAVAILABLE;
 
 + (instancetype)new NS_UNAVAILABLE;
 
-- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode scale:(CGFloat)scale depth:(CGFloat)depth blendMode:(MTIBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode type:(MTIMaskType)type movement:(CGFloat)movement scale:(CGFloat)scale zoom:(CGFloat)zoom rotation:(CGFloat)rotation depth:(CGFloat)depth offsetJitter:(CGFloat)offsetJitter blendMode:(MTIBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)initWithContent:(MTIImage *)content;
 
