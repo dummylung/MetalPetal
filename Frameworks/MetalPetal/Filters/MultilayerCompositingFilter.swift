@@ -74,6 +74,8 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var blendMode: MTIBlendMode = .normal
         
+        public var renderingBlendMode: MTIBlendMode = .normal
+        
         public var fillMode: MTILayer.FillMode = .normal
         
         public var shape: MTIShape
@@ -110,6 +112,7 @@ public class MultilayerCompositingFilter: MTIFilter {
             hasher.combine(cornerCurve)
             hasher.combine(tintColor)
             hasher.combine(blendMode)
+            hasher.combine(renderingBlendMode)
             hasher.combine(fillMode)
             hasher.combine(shape)
         }
@@ -174,6 +177,10 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public func blendMode(_ blendMode: MTIBlendMode) -> Layer {
             self.mutating({ $0.blendMode = blendMode })
+        }
+        
+        public func renderingBlendMode(_ renderingBlendMode: MTIBlendMode) -> Layer {
+            self.mutating({ $0.renderingBlendMode = renderingBlendMode })
         }
         
         public func corner(radius: MTICornerRadius, curve: MTICornerCurve) -> Layer {
@@ -259,7 +266,7 @@ extension MultilayerCompositingFilter {
 
 extension MultilayerCompositingFilter.Layer {
     fileprivate func bridgeToObjectiveC() -> MTILayer {
-        return MTILayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, materialMask: self.materialMask, layoutUnit: self.layoutUnit, position: self.position, startPosition: self.startPosition, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, fillMode: self.fillMode, shape: self.shape)
+        return MTILayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, materialMask: self.materialMask, layoutUnit: self.layoutUnit, position: self.position, startPosition: self.startPosition, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, renderingBlendMode: self.renderingBlendMode, fillMode: self.fillMode, shape: self.shape)
     }
 }
 

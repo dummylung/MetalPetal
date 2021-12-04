@@ -73,6 +73,8 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic, copy, readonly) MTIBlendMode blendMode;
 
+@property (nonatomic, copy, readonly) MTIBlendMode renderingBlendMode;
+
 @property (nonatomic, readonly) MTILayerFillMode fillMode;
 
 @property (nonatomic, readonly) MTIShape *shape;
@@ -90,7 +92,7 @@ __attribute__((objc_subclassing_restricted))
 //
 //- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask materialMask:(nullable MTIMaterialMask *)materialMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position startPosition:(CGPoint)startPosition size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask materialMask:(nullable MTIMaterialMask *)materialMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position startPosition:(CGPoint)startPosition size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode renderingBlendMode:(MTIBlendMode)renderingBlendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape NS_DESIGNATED_INITIALIZER;
 
 - (CGSize)sizeInPixelForBackgroundSize:(CGSize)backgroundSize;
 
