@@ -300,8 +300,15 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                 textureColor.a = min(1.0, textureColor.a + (parameters.shapeCount-1) * 0.02);
             }
             
-            finalColor = blend(parameters.renderingBlendMode, currentColor, textureColor);
-            
+            switch (parameters.renderingMode) {
+                case 0:
+                    finalColor = currentColor.a > textureColor.a ? currentColor : textureColor;
+                    break;
+                case 1:
+                    finalColor = blend(parameters.renderingBlendMode, currentColor, textureColor);
+                    break;
+            }
+    
             break;
         }
         case 1: // substract
