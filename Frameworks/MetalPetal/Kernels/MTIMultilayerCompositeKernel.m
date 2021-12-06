@@ -622,6 +622,9 @@ __attribute__((objc_subclassing_restricted))
         
         parameters.shapeComponent = (int)layer.shape.component;
         parameters.shapeUsesOneMinusValue = layer.shape.mode == MTIMaskModeOneMinusMaskValue;
+        parameters.shapeRotation = layer.shape.rotation;
+        parameters.shapeFlipX = layer.shape.flipOptions & MTIShapeFlipOptionsFlipHorizontally;
+        parameters.shapeFlipY = layer.shape.flipOptions & MTIShapeFlipOptionsFlipVertically;
         
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;
@@ -631,7 +634,7 @@ __attribute__((objc_subclassing_restricted))
         
         [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
                     contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width, layer.contentRegion.origin.y/layer.content.size.height, layer.contentRegion.size.width/layer.content.size.width, layer.contentRegion.size.height/layer.content.size.height)
-                      flipOptions:layer.shape.flipOptions
+                      flipOptions:MTIShapeFlipOptionsDonotFlip
                    commandEncoder:commandEncoder];
     }
     

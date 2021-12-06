@@ -127,7 +127,22 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
     #if MTI_CUSTOM_BLEND_HAS_TEXTURE_COORDINATES_MODIFIER
     textureCoordinate = modify_source_texture_coordinates(currentColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
-    float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+    
+    float2 shapePosition = textureCoordinate;
+    
+    if (parameters.shapeFlipX) {
+        shapePosition = float2(1 - shapePosition.x, shapePosition.y);
+    }
+    if (parameters.shapeFlipY) {
+        shapePosition = float2(shapePosition.x, 1 - shapePosition.y);
+    }
+    if (parameters.shapeRotation != 0) {
+        shapePosition = transformPointCoord(float2(parameters.layerSize.x * shapePosition.x, parameters.layerSize.y * shapePosition.y),
+                                            -parameters.shapeRotation,
+                                            float2(parameters.layerSize.x*0.5, parameters.layerSize.y*0.5));
+        shapePosition = float2(shapePosition.x / parameters.layerSize.x, shapePosition.y / parameters.layerSize.y);
+    }
+    float4 textureColor = colorTexture.sample(colorSampler, shapePosition);
     
 //    constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
 //    float4 textureColor = colorTexture.sample(textureSampler, textureCoordinate);
@@ -150,10 +165,10 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //        float2 location = vertexIn.position.xy / parameters.canvasSize;
         float scale = parameters.compositingMaskScale;
         float zoom = parameters.compositingMaskZoom*0.2+1;
-        
+
         float x = 0;
         float y = 0;
-        
+
         switch (parameters.compositingMaskType) {
             case 0: // moving
             {
@@ -163,7 +178,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //                y = vertexIn.textureCoordinate.y / s;
 //                x = x - (int)x;
 //                y = y - (int)y;
-                
+
                 float2 origin = float2(0,0);
                 float2 offset = float2(0,0);
                 if (parameters.compositingOffsetJitter > 0) {
@@ -171,18 +186,18 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                     offset = parameters.compositingOffsetJitter * parameters.layerSize;
                 }
                 float2 layerPosition = float2(parameters.layerSize.x * vertexIn.textureCoordinate.x, parameters.layerSize.y * vertexIn.textureCoordinate.y);
-                
+
                 layerPosition = layerPosition + offset;
-                
+
                 float dx = vertexIn.position.x - layerPosition.x + parameters.layerSize.x*0.5;
                 float dy = vertexIn.position.y - layerPosition.y + parameters.layerSize.y*0.5;
-                
+
                 dx = dx - origin.x;
                 dy = dy - origin.y;
-                
+
                 dx = dx * parameters.compositingMaskMovement + layerPosition.x - parameters.layerSize.x*0.5;
                 dy = dy * parameters.compositingMaskMovement + layerPosition.y - parameters.layerSize.y*0.5;
-                
+
                 if (parameters.compositingMaskRotation != 0) {
                     float2 r = transformPointCoord(float2(dx,dy),
                                                    parameters.compositingMaskRotation * M_PI_4_F,
@@ -190,16 +205,16 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                     dx = r.x;
                     dy = r.y;
                 }
-                
+
                 x = dx / (compositingMaskTexture.get_width() * scale * zoom);
                 y = dy / (compositingMaskTexture.get_height() * scale * zoom);
-                
+
                 x = x - (int)x;
                 y = y - (int)y;
-                
+
                 (x < 0) && (x = 1-(-x));
                 (y < 0) && (y = 1-(-y));
-                
+
                 break;
             }
             case 1: // texturised
@@ -211,16 +226,16 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                 break;
             }
         }
-        
+
         float4 maskColor = compositingMaskTexture.sample(compositingMaskSampler, float2(x, y));
         maskColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
 
         float maskValue = maskColor[parameters.compositingMaskComponent];
         maskValue = parameters.compositingMaskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
         maskColor = float4(maskValue, maskValue, maskValue, maskColor.a);
-        
+
         maskColor.a *= parameters.compositingMaskDepth;
-        
+
         maskColor = blend(parameters.compositingMaskBlendMode, textureColor, maskColor);
         textureColor = maskColor;
     }

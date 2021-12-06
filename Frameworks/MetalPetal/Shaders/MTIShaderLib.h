@@ -47,6 +47,9 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     int shapeComponent;
     bool shapeUsesOneMinusValue;
     int shapeCount;
+    float shapeRotation;
+    bool shapeFlipX;
+    bool shapeFlipY;
     
     int maskComponent;
     bool maskHasPremultipliedAlpha;
