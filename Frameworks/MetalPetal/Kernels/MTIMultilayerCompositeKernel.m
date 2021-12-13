@@ -602,13 +602,19 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskRotation = layer.compositingMask.rotation;
         parameters.compositingMaskDepth = layer.compositingMask.depth;
         parameters.compositingMaskBlendMode = (int)[allCases indexOfObject:layer.compositingMask.blendMode];
-        parameters.compositingOffsetJitter = layer.compositingMask.offsetJitter;
+        parameters.compositingMaskOffsetJitter = layer.compositingMask.offsetJitter;
         
         parameters.materialMaskComponent = (int)layer.materialMask.component;
         parameters.materialMaskUsesOneMinusValue = layer.materialMask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.materialMaskHasPremultipliedAlpha = layer.materialMask.content.alphaType == MTIAlphaTypePremultiplied;
+        parameters.materialMaskType = (int)layer.materialMask.type;
+        parameters.materialMaskMovement = layer.materialMask.movement;
         parameters.materialMaskScale = layer.materialMask.scale;
+        parameters.materialMaskZoom = layer.materialMask.zoom;
+        parameters.materialMaskRotation = layer.materialMask.rotation;
         parameters.materialMaskDepth = layer.materialMask.depth;
+        parameters.materialMaskBlendMode = (int)[allCases indexOfObject:layer.materialMask.blendMode];
+        parameters.materialMaskOffsetJitter = layer.materialMask.offsetJitter;
         parameters.materialMaskDepth1 = layer.materialMask.depth1;
         parameters.materialMaskDepth1Inverted = layer.materialMask.depth1Inverted;
         parameters.materialMaskBlendMode1 = (int)[allCases indexOfObject:layer.materialMask.blendMode1];
@@ -968,8 +974,14 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
             newMaterialMask = [[MTIMaterialMask alloc] initWithContent:newMaterialMaskContent
                                                              component:materialMask.component
                                                                   mode:materialMask.mode
+                                                                  type:materialMask.type
+                                                              movement:materialMask.movement
                                                                  scale:materialMask.scale
+                                                                  zoom:materialMask.zoom
+                                                              rotation:materialMask.rotation
                                                                  depth:materialMask.depth
+                                                          offsetJitter:materialMask.offsetJitter
+                                                             blendMode:materialMask.blendMode
                                                                 depth1:materialMask.depth1
                                                         depth1Inverted:materialMask.depth1Inverted
                                                             blendMode1:materialMask.blendMode1

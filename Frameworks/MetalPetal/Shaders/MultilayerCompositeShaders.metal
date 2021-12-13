@@ -181,26 +181,24 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 
                 float2 origin = float2(0,0);
                 float2 offset = float2(0,0);
-                if (parameters.compositingOffsetJitter > 0) {
+                if (parameters.compositingMaskOffsetJitter > 0) {
                     origin = float2(parameters.startPosition.x, parameters.startPosition.y);
-                    offset = parameters.compositingOffsetJitter * parameters.layerSize;
+                    offset = parameters.compositingMaskOffsetJitter * parameters.layerSize;
                 }
                 float2 layerPosition = float2(parameters.layerSize.x * vertexIn.textureCoordinate.x, parameters.layerSize.y * vertexIn.textureCoordinate.y);
-
-                layerPosition = layerPosition + offset;
-
+                
                 float dx = vertexIn.position.x - layerPosition.x + parameters.layerSize.x*0.5;
                 float dy = vertexIn.position.y - layerPosition.y + parameters.layerSize.y*0.5;
 
-                dx = dx - origin.x;
-                dy = dy - origin.y;
+                dx = dx - origin.x - offset.x;
+                dy = dy - origin.y - offset.y;
 
                 dx = dx * parameters.compositingMaskMovement + layerPosition.x - parameters.layerSize.x*0.5;
                 dy = dy * parameters.compositingMaskMovement + layerPosition.y - parameters.layerSize.y*0.5;
 
                 if (parameters.compositingMaskRotation != 0) {
                     float2 r = transformPointCoord(float2(dx,dy),
-                                                   parameters.compositingMaskRotation * M_PI_4_F,
+                                                   parameters.compositingMaskRotation * M_PI_2_F,
                                                    float2(parameters.layerSize.x*0.5, parameters.layerSize.y*0.5));
                     dx = r.x;
                     dy = r.y;
@@ -253,12 +251,68 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
     }
     
     if (multilayer_composite_has_material_mask && textureColor.a > 0) {
+//        float scale = parameters.materialMaskScale;
+//        float x = vertexIn.position.x / (materialMaskTexture.get_width() * scale);
+//        float y = vertexIn.position.y / (materialMaskTexture.get_height() * scale);
+//        x = x - (int)x;
+//        y = y - (int)y;
+        
         constexpr sampler materialMaskSampler(mag_filter::linear, min_filter::linear);
         float scale = parameters.materialMaskScale;
-        float x = vertexIn.position.x / (materialMaskTexture.get_width() * scale);
-        float y = vertexIn.position.y / (materialMaskTexture.get_height() * scale);
-        x = x - (int)x;
-        y = y - (int)y;
+        float zoom = parameters.materialMaskZoom*0.2+1;
+
+        float x = 0;
+        float y = 0;
+        
+        switch (parameters.materialMaskType) {
+            case 0: // moving
+            {
+                float2 origin = float2(0,0);
+                float2 offset = float2(0,0);
+                if (parameters.materialMaskOffsetJitter > 0) {
+                    origin = float2(parameters.startPosition.x, parameters.startPosition.y);
+                    offset = parameters.materialMaskOffsetJitter * parameters.layerSize;
+                }
+                float2 layerPosition = float2(parameters.layerSize.x * vertexIn.textureCoordinate.x, parameters.layerSize.y * vertexIn.textureCoordinate.y);
+                
+                float dx = vertexIn.position.x - layerPosition.x + parameters.layerSize.x*0.5;
+                float dy = vertexIn.position.y - layerPosition.y + parameters.layerSize.y*0.5;
+
+                dx = dx - origin.x - offset.x;
+                dy = dy - origin.y - offset.y;
+
+                dx = dx * parameters.materialMaskMovement + layerPosition.x - parameters.layerSize.x*0.5;
+                dy = dy * parameters.materialMaskMovement + layerPosition.y - parameters.layerSize.y*0.5;
+
+                if (parameters.materialMaskRotation != 0) {
+                    float2 r = transformPointCoord(float2(dx,dy),
+                                                   parameters.materialMaskRotation * M_PI_2_F,
+                                                   float2(parameters.layerSize.x*0.5, parameters.layerSize.y*0.5));
+                    dx = r.x;
+                    dy = r.y;
+                }
+
+                x = dx / (materialMaskTexture.get_width() * scale * zoom);
+                y = dy / (materialMaskTexture.get_height() * scale * zoom);
+
+                x = x - (int)x;
+                y = y - (int)y;
+
+                (x < 0) && (x = 1-(-x));
+                (y < 0) && (y = 1-(-y));
+
+                break;
+            }
+            case 1: // texturised
+            {
+                x = vertexIn.position.x / (materialMaskTexture.get_width() * scale);
+                y = vertexIn.position.y / (materialMaskTexture.get_height() * scale);
+                x = x - (int)x;
+                y = y - (int)y;
+                break;
+            }
+        }
+        
         float4 maskColor = materialMaskTexture.sample(materialMaskSampler, float2(x, y));
         maskColor = parameters.materialMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
         
@@ -269,6 +323,8 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         if (parameters.materialMaskDepth >= 0.01) {
             
             maskColor.a *= parameters.materialMaskDepth;
+            
+            maskColor = blend(parameters.materialMaskBlendMode, textureColor, maskColor);
             
             if (maskColor.a >= 0) {
                 float3 textureColorHSL = rgb2hsl(textureColor.rgb);
@@ -284,11 +340,13 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                 blendColor = blend(blendMode2, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth2Inverted ? 1-depth2Value : depth2Value));
                 textureColor.rgb = blendColor.rgb;
             }
+            
         }
         
         if (maskColor.a < 0.01) {
             textureColor.a *= maskColor.a; // solution for transparent image
         }
+        
     }
     
 //    switch (multilayer_composite_corner_curve_type) {

@@ -28,7 +28,7 @@ typedef NS_ENUM(NSInteger, MTIMaskType) {
     MTIMaskTypeTexturised
 };
 
-__attribute__((objc_subclassing_restricted))
+//__attribute__((objc_subclassing_restricted))
 @interface MTIMask : NSObject <NSCopying>
 
 @property (nonatomic, strong, readonly) MTIImage *content;

@@ -64,14 +64,20 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     float compositingMaskZoom;
     float compositingMaskRotation;
     float compositingMaskDepth;
-    float compositingOffsetJitter;
+    float compositingMaskOffsetJitter;
     int compositingMaskBlendMode;
     
     int materialMaskComponent;
     bool materialMaskHasPremultipliedAlpha;
     bool materialMaskUsesOneMinusValue;
+    int materialMaskType;
+    float materialMaskMovement;
     float materialMaskScale;
+    float materialMaskZoom;
+    float materialMaskRotation;
     float materialMaskDepth;
+    float materialMaskOffsetJitter;
+    int materialMaskBlendMode;
     float materialMaskDepth1;
     bool materialMaskDepth1Inverted;
     int materialMaskBlendMode1;
