@@ -42,14 +42,14 @@ typedef NS_ENUM(NSInteger, MTIMaskType) {
 @property (nonatomic, readonly) CGFloat zoom;
 @property (nonatomic, readonly) CGFloat rotation;
 @property (nonatomic, readonly) CGFloat depth;
-@property (nonatomic, readonly) CGFloat offsetJitter;
+@property (nonatomic, readonly) CGPoint offsetJitter;
 @property (nonatomic, readonly) MTIBlendMode blendMode;
 
 - (instancetype)init NS_UNAVAILABLE;
 
 + (instancetype)new NS_UNAVAILABLE;
 
-- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode type:(MTIMaskType)type movement:(CGFloat)movement scale:(CGFloat)scale zoom:(CGFloat)zoom rotation:(CGFloat)rotation depth:(CGFloat)depth offsetJitter:(CGFloat)offsetJitter blendMode:(MTIBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode type:(MTIMaskType)type movement:(CGFloat)movement scale:(CGFloat)scale zoom:(CGFloat)zoom rotation:(CGFloat)rotation depth:(CGFloat)depth offsetJitter:(CGPoint)offsetJitter blendMode:(MTIBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)initWithContent:(MTIImage *)content;
 

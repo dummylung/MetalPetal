@@ -181,9 +181,9 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 
                 float2 origin = float2(0,0);
                 float2 offset = float2(0,0);
-                if (parameters.compositingMaskOffsetJitter > 0) {
+                if (parameters.compositingMaskOffsetJitter.x > 0 || parameters.compositingMaskOffsetJitter.y > 0) {
                     origin = float2(parameters.startPosition.x, parameters.startPosition.y);
-                    offset = parameters.compositingMaskOffsetJitter * parameters.layerSize;
+                    offset = parameters.compositingMaskOffsetJitter;
                 }
                 float2 layerPosition = float2(parameters.layerSize.x * vertexIn.textureCoordinate.x, parameters.layerSize.y * vertexIn.textureCoordinate.y);
                 
@@ -269,9 +269,9 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
             {
                 float2 origin = float2(0,0);
                 float2 offset = float2(0,0);
-                if (parameters.materialMaskOffsetJitter > 0) {
+                if (parameters.materialMaskOffsetJitter.x > 0 || parameters.materialMaskOffsetJitter.y > 0 ) {
                     origin = float2(parameters.startPosition.x, parameters.startPosition.y);
-                    offset = parameters.materialMaskOffsetJitter * parameters.layerSize;
+                    offset = parameters.materialMaskOffsetJitter;
                 }
                 float2 layerPosition = float2(parameters.layerSize.x * vertexIn.textureCoordinate.x, parameters.layerSize.y * vertexIn.textureCoordinate.y);
                 

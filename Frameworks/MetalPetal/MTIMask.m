@@ -9,7 +9,7 @@
 
 @implementation MTIMask
 
-- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode type:(MTIMaskType)type movement:(CGFloat)movement scale:(CGFloat)scale zoom:(CGFloat)zoom rotation:(CGFloat)rotation depth:(CGFloat)depth offsetJitter:(CGFloat)offsetJitter blendMode:(MTIBlendMode)blendMode {
+- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode type:(MTIMaskType)type movement:(CGFloat)movement scale:(CGFloat)scale zoom:(CGFloat)zoom rotation:(CGFloat)rotation depth:(CGFloat)depth offsetJitter:(CGPoint)offsetJitter blendMode:(MTIBlendMode)blendMode {
     if (self = [super init]) {
         _content = content;
         _component = component;
@@ -27,7 +27,7 @@
 }
 
 - (instancetype)initWithContent:(MTIImage *)content {
-    return [self initWithContent:content component:MTIColorComponentRed mode:MTIMaskModeNormal type:MTIMaskTypeMoving movement:0 scale:1.0 zoom:0 rotation:0 depth:1 offsetJitter:0 blendMode:MTIBlendModeMultiply];
+    return [self initWithContent:content component:MTIColorComponentRed mode:MTIMaskModeNormal type:MTIMaskTypeMoving movement:0 scale:1.0 zoom:0 rotation:0 depth:1 offsetJitter:CGPointZero blendMode:MTIBlendModeMultiply];
 }
 
 - (id)copyWithZone:(NSZone *)zone {

@@ -602,7 +602,7 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskRotation = layer.compositingMask.rotation;
         parameters.compositingMaskDepth = layer.compositingMask.depth;
         parameters.compositingMaskBlendMode = (int)[allCases indexOfObject:layer.compositingMask.blendMode];
-        parameters.compositingMaskOffsetJitter = layer.compositingMask.offsetJitter;
+        parameters.compositingMaskOffsetJitter = simd_make_float2(layer.compositingMask.offsetJitter.x, layer.compositingMask.offsetJitter.y);
         
         parameters.materialMaskComponent = (int)layer.materialMask.component;
         parameters.materialMaskUsesOneMinusValue = layer.materialMask.mode == MTIMaskModeOneMinusMaskValue;
@@ -614,7 +614,7 @@ __attribute__((objc_subclassing_restricted))
         parameters.materialMaskRotation = layer.materialMask.rotation;
         parameters.materialMaskDepth = layer.materialMask.depth;
         parameters.materialMaskBlendMode = (int)[allCases indexOfObject:layer.materialMask.blendMode];
-        parameters.materialMaskOffsetJitter = layer.materialMask.offsetJitter;
+        parameters.materialMaskOffsetJitter = simd_make_float2(layer.materialMask.offsetJitter.x, layer.materialMask.offsetJitter.y);
         parameters.materialMaskDepth1 = layer.materialMask.depth1;
         parameters.materialMaskDepth1Inverted = layer.materialMask.depth1Inverted;
         parameters.materialMaskBlendMode1 = (int)[allCases indexOfObject:layer.materialMask.blendMode1];
