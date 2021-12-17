@@ -183,23 +183,23 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                 float2 offset = float2(0,0);
                 if (parameters.compositingMaskOffsetJitter.x > 0 || parameters.compositingMaskOffsetJitter.y > 0) {
                     origin = float2(parameters.startPosition.x, parameters.startPosition.y);
-                    offset = parameters.compositingMaskOffsetJitter;
+                    offset = parameters.compositingMaskOffsetJitter * parameters.startLayerSize;
                 }
                 float2 layerPosition = float2(parameters.layerSize.x * vertexIn.textureCoordinate.x, parameters.layerSize.y * vertexIn.textureCoordinate.y);
                 
                 float dx = vertexIn.position.x - layerPosition.x + parameters.layerSize.x*0.5;
                 float dy = vertexIn.position.y - layerPosition.y + parameters.layerSize.y*0.5;
 
-                dx = dx - origin.x - offset.x;
-                dy = dy - origin.y - offset.y;
-
                 dx = dx * parameters.compositingMaskMovement + layerPosition.x - parameters.layerSize.x*0.5;
                 dy = dy * parameters.compositingMaskMovement + layerPosition.y - parameters.layerSize.y*0.5;
-
+                
+                dx = dx - origin.x - offset.x;
+                dy = dy - origin.y - offset.y;
+                
                 if (parameters.compositingMaskRotation != 0) {
                     float2 r = transformPointCoord(float2(dx,dy),
                                                    parameters.compositingMaskRotation * M_PI_2_F,
-                                                   float2(parameters.layerSize.x*0.5, parameters.layerSize.y*0.5));
+                                                   float2(parameters.startLayerSize.x*0.5, parameters.startLayerSize.y*0.5));
                     dx = r.x;
                     dy = r.y;
                 }
@@ -271,23 +271,23 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                 float2 offset = float2(0,0);
                 if (parameters.materialMaskOffsetJitter.x > 0 || parameters.materialMaskOffsetJitter.y > 0 ) {
                     origin = float2(parameters.startPosition.x, parameters.startPosition.y);
-                    offset = parameters.materialMaskOffsetJitter;
+                    offset = parameters.materialMaskOffsetJitter * parameters.startLayerSize;
                 }
                 float2 layerPosition = float2(parameters.layerSize.x * vertexIn.textureCoordinate.x, parameters.layerSize.y * vertexIn.textureCoordinate.y);
                 
                 float dx = vertexIn.position.x - layerPosition.x + parameters.layerSize.x*0.5;
                 float dy = vertexIn.position.y - layerPosition.y + parameters.layerSize.y*0.5;
 
-                dx = dx - origin.x - offset.x;
-                dy = dy - origin.y - offset.y;
-
                 dx = dx * parameters.materialMaskMovement + layerPosition.x - parameters.layerSize.x*0.5;
                 dy = dy * parameters.materialMaskMovement + layerPosition.y - parameters.layerSize.y*0.5;
+                
+                dx = dx - origin.x - offset.x;
+                dy = dy - origin.y - offset.y;
 
                 if (parameters.materialMaskRotation != 0) {
                     float2 r = transformPointCoord(float2(dx,dy),
                                                    parameters.materialMaskRotation * M_PI_2_F,
-                                                   float2(parameters.layerSize.x*0.5, parameters.layerSize.y*0.5));
+                                                   float2(parameters.startLayerSize.x*0.5, parameters.startLayerSize.y*0.5));
                     dx = r.x;
                     dy = r.y;
                 }

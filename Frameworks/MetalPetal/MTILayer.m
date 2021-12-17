@@ -83,7 +83,7 @@
 //                        fillMode:MTILayerFillModeNormal];
 //}
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(MTIMask *)mask compositingMask:(MTIMask *)compositingMask materialMask:(MTIMaterialMask *)materialMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position startPosition:(CGPoint)startPosition size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(nonnull MTIBlendMode)blendMode renderingMode:(MTILayerRenderingMode)renderingMode renderingBlendMode:(MTIBlendMode)renderingBlendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape {
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(MTIMask *)mask compositingMask:(MTIMask *)compositingMask materialMask:(MTIMaterialMask *)materialMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position startPosition:(CGPoint)startPosition size:(CGSize)size startSize:(CGSize)startSize rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(nonnull MTIBlendMode)blendMode renderingMode:(MTILayerRenderingMode)renderingMode renderingBlendMode:(MTIBlendMode)renderingBlendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape {
     if (self = [super init]) {
         _content = content;
         _contentRegion = contentRegion;
@@ -94,6 +94,7 @@
         _position = position;
         _startPosition = startPosition;
         _size = size;
+        _startSize = startSize;
         _rotation = rotation;
         _opacity = opacity;
         _cornerRadius = cornerRadius;
@@ -118,6 +119,17 @@
             return _size;
         case MTILayerLayoutUnitFractionOfBackgroundSize:
             return CGSizeMake(backgroundSize.width * _size.width, backgroundSize.height * _size.height);
+        default:
+            @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:@"Unknown MTILayerLayoutUnit" userInfo:@{@"Unit": @(_layoutUnit)}];
+    }
+}
+
+- (CGSize)startSizeInPixelForBackgroundSize:(CGSize)backgroundSize {
+    switch (_layoutUnit) {
+        case MTILayerLayoutUnitPixel:
+            return _startSize;
+        case MTILayerLayoutUnitFractionOfBackgroundSize:
+            return CGSizeMake(backgroundSize.width * _startSize.width, backgroundSize.height * _startSize.height);
         default:
             @throw [NSException exceptionWithName:NSInternalInconsistencyException reason:@"Unknown MTILayerLayoutUnit" userInfo:@{@"Unit": @(_layoutUnit)}];
     }

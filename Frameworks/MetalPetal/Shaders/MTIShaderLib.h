@@ -90,6 +90,7 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     
     vector_float2 layerSize;
     vector_float2 startPosition;
+    vector_float2 startLayerSize;
     
     int renderingMode;
     int renderingBlendMode;
