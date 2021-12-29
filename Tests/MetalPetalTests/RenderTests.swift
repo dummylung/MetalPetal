@@ -136,7 +136,6 @@ final class RenderTests: XCTestCase {
         XCTAssert(context.idleResourceCount == 0)
     }
     
-    @available(iOS 11.0, *)
     func testCoreImageFilter() throws {
         let image = MTIImage.black
         let filter = MTICoreImageUnaryFilter()
@@ -151,7 +150,6 @@ final class RenderTests: XCTestCase {
         }
     }
     
-    @available(iOS 11.0, *)
     func testCoreImageFilter_lanczosScaleTransform() throws {
         let ciFilter = CIFilter(name: "CILanczosScaleTransform")
         ciFilter?.setValue(2, forKey: "inputScale")
@@ -202,7 +200,6 @@ final class RenderTests: XCTestCase {
         }
     }
     
-    @available(iOS 11.0, *)
     func testCoreImageGenerator() throws {
         let filter: CIFilter = CIFilter(name: "CICheckerboardGenerator")!
         filter.setValue(CIVector(x: 0, y: 0), forKey: "inputCenter")
@@ -868,7 +865,6 @@ final class RenderTests: XCTestCase {
         XCTAssert(pixels == [0,0,192,192])
     }
     
-    @available(iOS 11.0, macOS 10.13, *)
     func testMSAA_multilayerCompositing() throws {
         let context = try makeContext()
         
@@ -922,7 +918,6 @@ final class RenderTests: XCTestCase {
         }
     }
     
-    @available(iOS 11.0, macOS 10.13, *)
     func testMSAA_renderCommand() throws {
         let context = try makeContext()
         
@@ -1141,7 +1136,7 @@ final class RenderTests: XCTestCase {
         let libraryURL = MTILibrarySourceRegistration.shared.registerLibrary(source: librarySource, compileOptions: nil)
         let renderKernel = MTIRenderPipelineKernel(vertexFunctionDescriptor: .passthroughVertex, fragmentFunctionDescriptor: MTIFunctionDescriptor(name: "testRender", libraryURL: libraryURL))
         let image = MTIImage(color: MTIColor(red: 0, green: 1, blue: 0, alpha: 1), sRGB: false, size: CGSize(width: 1, height: 1))
-        let outputImage = renderKernel.apply(toInputImages: [image], parameters: ["color": MTIVector(value: SIMD4<Float>(1, 0, 0, 0))], outputTextureDimensions: image.dimensions, outputPixelFormat: .unspecified)
+        let outputImage = renderKernel.apply(to: [image], parameters: ["color": MTIVector(value: SIMD4<Float>(1, 0, 0, 0))], outputDimensions: image.dimensions, outputPixelFormat: .unspecified)
         let context = try makeContext()
         let output = try context.makeCGImage(from: outputImage)
         PixelEnumerator.enumeratePixels(in: output) { (pixel, _) in
@@ -1175,7 +1170,7 @@ final class RenderTests: XCTestCase {
         constantValues.setConstantValue(&color, type: .float4, withName: "constColor")
         let renderKernel = MTIRenderPipelineKernel(vertexFunctionDescriptor: .passthroughVertex, fragmentFunctionDescriptor: MTIFunctionDescriptor(name: "testRender", constantValues: constantValues, libraryURL: libraryURL))
         let image = MTIImage(color: MTIColor(red: 0, green: 1, blue: 0, alpha: 1), sRGB: false, size: CGSize(width: 1, height: 1))
-        let outputImage = renderKernel.apply(toInputImages: [image], parameters: [:], outputTextureDimensions: image.dimensions, outputPixelFormat: .unspecified)
+        let outputImage = renderKernel.apply(to: [image], parameters: [:], outputDimensions: image.dimensions, outputPixelFormat: .unspecified)
         let context = try makeContext()
         let output = try context.makeCGImage(from: outputImage)
         PixelEnumerator.enumeratePixels(in: output) { (pixel, _) in
@@ -1514,7 +1509,6 @@ final class RenderTests: XCTestCase {
         }
     }
     
-    @available(iOS 11.0, macOS 10.13, *)
     func testSKSceneRender() throws {
         let scene = SKScene(size: CGSize(width: 32, height: 32))
         
@@ -1952,6 +1946,30 @@ final class RenderTests: XCTestCase {
         let roundCornerFilterOutput = try context.makeCGImage(from: image)
         let multilayerCompositingFilterOutput = try context.makeCGImage(from: XCTUnwrap(compositedImage.cropped(to: CGRect(x: 32, y: 32, width: 32, height: 32))))
         XCTAssert(roundCornerFilterOutput.dataProvider?.data == multilayerCompositingFilterOutput.dataProvider?.data)
+    }
+    
+    func testZeroSizeImage_failure() throws {
+        let image = MTIImage(color: .white, sRGB: false, size: .zero)
+        let context = try makeContext()
+        do {
+            try context.startTask(toRender: image, completion: nil)
+            XCTFail()
+        } catch {
+            XCTAssert((error as? MTIError)?.code == .invalidTextureDimension)
+        }
+    }
+    
+    func testZeroSizeImage_filter_failure() throws {
+        let image = MTIImage(color: .white, sRGB: false, size: CGSize(width: 1, height: 1))
+        let intermediate = MTIRenderPipelineKernel.passthrough.apply(to: [image], parameters: [:], outputDimensions: MTITextureDimensions(width: 1, height: 0, depth: 1), outputPixelFormat: .unspecified)
+        let output = MTIRenderPipelineKernel.passthrough.apply(to: [intermediate], parameters: [:], outputDimensions: MTITextureDimensions(width: 1, height: 1, depth: 1), outputPixelFormat: .unspecified)
+        let context = try makeContext()
+        do {
+            try context.startTask(toRender: output, completion: nil)
+            XCTFail()
+        } catch {
+            XCTAssert((error as? MTIError)?.code == .invalidTextureDimension)
+        }
     }
 }
 
