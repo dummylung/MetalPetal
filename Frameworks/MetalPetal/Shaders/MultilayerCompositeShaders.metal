@@ -319,20 +319,24 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         if (parameters.materialMaskUsesOneMinusValue) {
             maskColor = float4(1.0-maskColor.r,1.0-maskColor.g,1.0-maskColor.b,maskColor.a);
         }
-        
-        if (parameters.materialMaskDepth >= 0.01) {
+
+        if (maskColor.a < 0.1) {
             
+            textureColor.a *= 0; // solution for transparent image
+            
+        } else if (parameters.materialMaskDepth >= 0.01) {
+
             maskColor.a *= parameters.materialMaskDepth;
-            
+
             maskColor = blend(parameters.materialMaskBlendMode, textureColor, maskColor);
-            
+
             if (maskColor.a >= 0) {
                 float3 textureColorHSL = rgb2hsl(textureColor.rgb);
                 float lightness = textureColorHSL.b;
 
                 float depth1Value = lightness * parameters.materialMaskDepth1;
                 float depth2Value = lightness * parameters.materialMaskDepth2;
-                
+
                 float4 blendColor = maskColor;
                 int blendMode1 = parameters.materialMaskBlendMode1;
                 int blendMode2 = parameters.materialMaskBlendMode2;
@@ -340,11 +344,6 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                 blendColor = blend(blendMode2, blendColor, float4(textureColor.rgb, parameters.materialMaskDepth2Inverted ? 1-depth2Value : depth2Value));
                 textureColor.rgb = blendColor.rgb;
             }
-            
-        }
-        
-        if (maskColor.a < 0.01) {
-            textureColor.a *= maskColor.a; // solution for transparent image
         }
         
     }
