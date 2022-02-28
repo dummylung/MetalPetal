@@ -250,7 +250,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         textureColor.rgb = parameters.tintColor.rgb;
     }
     
-    if (multilayer_composite_has_material_mask && textureColor.a > 0) {
+    if (multilayer_composite_has_material_mask && textureColor.a > 0 && textureColor[parameters.shapeComponent] > 0.01) {
 //        float scale = parameters.materialMaskScale;
 //        float x = vertexIn.position.x / (materialMaskTexture.get_width() * scale);
 //        float y = vertexIn.position.y / (materialMaskTexture.get_height() * scale);
@@ -380,7 +380,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                     finalColor = blend(parameters.renderingBlendMode, currentColor, textureColor);
                     break;
             }
-    
+            
             break;
         }
         case 1: // substract
