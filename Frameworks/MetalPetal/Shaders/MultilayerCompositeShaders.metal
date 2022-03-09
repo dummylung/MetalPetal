@@ -160,7 +160,9 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //        textureColor.a *= parameters.maskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
 //    }
     
-    if (multilayer_composite_has_compositing_mask && textureColor[parameters.shapeComponent] > 0.01) {
+    bool isEmpty = textureColor[parameters.shapeComponent] <= 0.01;
+    
+    if (multilayer_composite_has_compositing_mask && !isEmpty) {
         constexpr sampler compositingMaskSampler(mag_filter::linear, min_filter::linear);
 //        float2 location = vertexIn.position.xy / parameters.canvasSize;
         float scale = parameters.compositingMaskScale;
@@ -250,7 +252,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         textureColor.rgb = parameters.tintColor.rgb;
     }
     
-    if (multilayer_composite_has_material_mask && textureColor.a > 0 && textureColor[parameters.shapeComponent] > 0.01) {
+    if (multilayer_composite_has_material_mask && textureColor.a > 0 && !isEmpty) {
 //        float scale = parameters.materialMaskScale;
 //        float x = vertexIn.position.x / (materialMaskTexture.get_width() * scale);
 //        float y = vertexIn.position.y / (materialMaskTexture.get_height() * scale);
