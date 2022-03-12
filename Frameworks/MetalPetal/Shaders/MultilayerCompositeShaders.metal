@@ -200,7 +200,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                 
                 if (parameters.compositingMaskRotation != 0) {
                     float2 r = transformPointCoord(float2(dx,dy),
-                                                   parameters.compositingMaskRotation * M_PI_2_F,
+                                                   parameters.compositingMaskRotation * M_PI_F,
                                                    float2(parameters.startLayerSize.x*0.5, parameters.startLayerSize.y*0.5));
                     dx = r.x;
                     dy = r.y;
@@ -288,7 +288,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 
                 if (parameters.materialMaskRotation != 0) {
                     float2 r = transformPointCoord(float2(dx,dy),
-                                                   parameters.materialMaskRotation * M_PI_2_F,
+                                                   parameters.materialMaskRotation * M_PI_F,
                                                    float2(parameters.startLayerSize.x*0.5, parameters.startLayerSize.y*0.5));
                     dx = r.x;
                     dy = r.y;
