@@ -162,6 +162,10 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
     
     bool isEmpty = textureColor[parameters.shapeComponent] <= 0.01;
     
+    if (isEmpty) {
+        discard_fragment();
+    }
+    
     if (multilayer_composite_has_compositing_mask && !isEmpty) {
         constexpr sampler compositingMaskSampler(mag_filter::linear, min_filter::linear);
 //        float2 location = vertexIn.position.xy / parameters.canvasSize;
