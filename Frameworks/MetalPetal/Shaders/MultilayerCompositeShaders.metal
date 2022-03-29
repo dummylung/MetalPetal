@@ -151,7 +151,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //    float4 textureColor = colorTexture.sample(colorSampler, shapePosition);
     
     constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
-    float4 textureColor = colorTexture.sample(textureSampler, textureCoordinate);
+    float4 textureColor = colorTexture.sample(textureSampler, shapePosition);
     
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
