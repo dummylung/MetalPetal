@@ -108,7 +108,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //                                                                    constant float4x4 & transformMatrix [[ buffer(2) ]],
 //                                                                    constant float4x4 & orthographicMatrix [[ buffer(3) ]],
                                                                     texture2d<float, access::sample> colorTexture [[ texture(0) ]],
-                                                                    sampler colorSampler [[ sampler(0) ]],
+//                                                                    sampler colorSampler [[ sampler(0) ]],
                                                                     texture2d<float, access::sample> compositingMaskTexture [[ texture(1) ]],
 //                                                                    sampler compositingMaskSampler [[ sampler(1) ]],
                                                                     texture2d<float, access::sample> maskTexture [[ texture(2) ]],
@@ -120,6 +120,12 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(4) ]],
 //                                                                    sampler backgroundSamplerBeforeCurrentSession [[ sampler(4) ]]
                                                                     ) {
+    if (currentColor.a > 0.99
+        && multilayer_composite_has_compositing_mask
+        && parameters.materialMaskType == 0
+        && parameters.materialMaskMovement == 1) {
+        discard_fragment();
+    }
     
     float alpha = parameters.tintColor.a;
     
@@ -142,10 +148,10 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
                                             float2(parameters.layerSize.x*0.5, parameters.layerSize.y*0.5));
         shapePosition = float2(shapePosition.x / parameters.layerSize.x, shapePosition.y / parameters.layerSize.y);
     }
-    float4 textureColor = colorTexture.sample(colorSampler, shapePosition);
+//    float4 textureColor = colorTexture.sample(colorSampler, shapePosition);
     
-//    constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
-//    float4 textureColor = colorTexture.sample(textureSampler, textureCoordinate);
+    constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
+    float4 textureColor = colorTexture.sample(textureSampler, textureCoordinate);
     
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
@@ -160,7 +166,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //        textureColor.a *= parameters.maskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
 //    }
     
-    bool isEmpty = textureColor[parameters.shapeComponent] <= 0.01;
+    bool isEmpty = textureColor[parameters.shapeComponent] < 0.01;
     
     if (isEmpty) {
         discard_fragment();
@@ -326,7 +332,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
             maskColor = float4(1.0-maskColor.r,1.0-maskColor.g,1.0-maskColor.b,maskColor.a);
         }
 
-        if (maskColor.a < 0.1) {
+        if (maskColor.a < 0.01) {
             
             textureColor.a *= 0; // solution for transparent image
             

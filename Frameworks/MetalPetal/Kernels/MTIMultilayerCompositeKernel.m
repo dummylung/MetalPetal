@@ -540,7 +540,7 @@ __attribute__((objc_subclassing_restricted))
         [commandEncoder setVertexBytes:&orthographicMatrix length:sizeof(orthographicMatrix) atIndex:2];
         
         [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.content] atIndex:0];
-        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.content] atIndex:0];
+//        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.content] atIndex:0];
         
 //        [commandEncoder setFragmentBytes:&sessionVertexes length:sizeof(sessionVertexes) atIndex:1];
 //        [commandEncoder setFragmentBytes:&transformMatrix length:sizeof(transformMatrix) atIndex:2];
