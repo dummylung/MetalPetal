@@ -120,7 +120,8 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(4) ]],
 //                                                                    sampler backgroundSamplerBeforeCurrentSession [[ sampler(4) ]]
                                                                     ) {
-    if (currentColor.a > 0.99
+    if (parameters.fillMode == 0
+        && currentColor.a > 0.99
         && multilayer_composite_has_compositing_mask
         && parameters.materialMaskType == 0
         && parameters.materialMaskMovement == 1) {
