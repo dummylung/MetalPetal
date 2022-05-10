@@ -32,7 +32,8 @@ typedef NS_CLOSED_ENUM(NSInteger, MTILayerLayoutUnit) {
 
 typedef NS_ENUM(NSInteger, MTILayerFillMode) {
     MTILayerFillModeNormal,
-    MTILayerFillModeSubstract
+    MTILayerFillModeSubstract,
+    MTILayerFillModeReplace,
 } NS_SWIFT_NAME(MTILayer.FillMode);
 
 typedef NS_ENUM(NSInteger, MTILayerRenderingMode) {

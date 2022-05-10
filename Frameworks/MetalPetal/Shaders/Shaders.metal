@@ -418,7 +418,178 @@ namespace metalpetal {
         float2 samplePos = textureCoordinate - fmod(textureCoordinate, scale) + scale * 0.5;
         return sourceTexture.sample(sourceSampler, samplePos/textureSize);
     }
-
+    
+//    class QItem {
+//    public:
+//        int row;
+//        int col;
+//        int dist;
+//        QItem(int x, int y, int d)
+//            : row(x), col(y), dist(d)
+//        {
+//        }
+//    };
+//     
+//    int minDistance(texture2d<float, access::sample> sourceTexture [[texture(0)]],
+//                    sampler sourceSampler [[sampler(0)]],
+//                    float2 position)
+//    {
+//        QItem source(position.x, position.y, 0);
+//        int width = sourceTexture.get_width();
+//        int height = sourceTexture.get_height();
+//
+//        // To keep track of visited QItems. Marking
+//        // blocked cells as visited.
+//        bool visited[20000][20000];
+//        for (int i = 0; i < width; i++) {
+//            for (int j = 0; j < height; j++) {
+//                visited[i][j] = false;
+//            }
+//        }
+//
+//        // applying BFS on matrix cells starting from source
+//        queue<QItem> q;
+//        q.push(source);
+//        visited[source.row][source.col] = true;
+//        while (!q.empty()) {
+//            QItem p = q.front();
+//            q.pop();
+//
+//            // Destination found;
+//            if (grid[p.row][p.col] == 'd')
+//                return p.dist;
+//
+//            // moving up
+//            if (p.row - 1 >= 0 && visited[p.row - 1][p.col] == false) {
+//                q.push(QItem(p.row - 1, p.col, p.dist + 1));
+//                visited[p.row - 1][p.col] = true;
+//            }
+//
+//            // moving down
+//            if (p.row + 1 < wid && visited[p.row + 1][p.col] == false) {
+//                q.push(QItem(p.row + 1, p.col, p.dist + 1));
+//                visited[p.row + 1][p.col] = true;
+//            }
+//
+//            // moving left
+//            if (p.col - 1 >= 0 && visited[p.row][p.col - 1] == false) {
+//                q.push(QItem(p.row, p.col - 1, p.dist + 1));
+//                visited[p.row][p.col - 1] = true;
+//            }
+//
+//             // moving right
+//            if (p.col + 1 < M && visited[p.row][p.col + 1] == false) {
+//                q.push(QItem(p.row, p.col + 1, p.dist + 1));
+//                visited[p.row][p.col + 1] = true;
+//            }
+//        }
+//        return -1;
+//    }
+    
+//    bool isPossiblePathDPS(float2 currPosition,
+//                           float2 destPosition,
+//                           float2 textureSize,
+//                           texture2d<float, access::sample> sourceTexture,
+//                           texture2d<float, access::sample> visitedTexture,
+////                           sampler sourceSampler,
+//                           sampler visitedSampler,
+//                           float4 color,
+//                           float thresholdSensitivity,
+//                           bool visited[20000][20000]
+//                           ) {
+//        float2 c = currPosition;
+//        float2 d = destPosition;
+//
+//        uint2 ci = uint2(c.x, c.y);
+//        uint2 di = uint2(d.x, d.y);
+//
+////        int row = floor(c.x);
+////        int col = floor(c.y);
+//
+////        return true;
+//
+//        if (di.x == ci.x && di.y == ci.y) {
+//            return true;
+//        }
+////        if (ci.x < 2) {
+////            return true;
+////        }
+//
+////        visitedTexture.write(float4(1,1,1,1), ci);
+//
+////        if (visitedTexture.read(ci).r == 1) {
+////            return true;
+////        }
+//
+//        if (
+//            c.x < 0
+//            || c.x > sourceTexture.get_width()
+//            || c.y < 0
+//            || c.y > sourceTexture.get_height()
+////            visited[ci.x][ci.y] == true
+//            || visitedTexture.sample(visitedSampler, currPosition / textureSize).r == 1
+//            ) {
+//            return false;
+//        }
+//
+////        visited[ci.x][ci.y] = true;
+//
+//        return true;
+//
+////        visitedTexture.write(float4(1,1,1,1), ci);
+//
+//        return isPossiblePathDPS(float2(c.x-1,c.y), destPosition, textureSize, sourceTexture, visitedTexture, visitedSampler, color, thresholdSensitivity, visited)
+//            || isPossiblePathDPS(float2(c.x+1,c.y), destPosition, textureSize, sourceTexture, visitedTexture, visitedSampler, color, thresholdSensitivity, visited)
+//            || isPossiblePathDPS(float2(c.x,c.y-1), destPosition, textureSize, sourceTexture, visitedTexture, visitedSampler, color, thresholdSensitivity, visited)
+//            || isPossiblePathDPS(float2(c.x,c.y+1), destPosition, textureSize, sourceTexture, visitedTexture, visitedSampler, color, thresholdSensitivity, visited)
+//        ;
+//    }
+//
+//    fragment float4 fillAdjacent(VertexOut vertexIn [[stage_in]],
+//                                 texture2d<float, access::sample> sourceTexture [[texture(0)]],
+//                                 texture2d<float, access::sample> backgroundTexture [[texture(1)]],
+//                                 sampler sourceSampler [[sampler(0)]],
+//                                 sampler backgroundSampler [[sampler(1)]],
+//                                 constant float4 &color [[buffer(0)]],
+//                                 constant float &thresholdSensitivity [[buffer(1)]],
+//                                 constant float2 &position [[buffer(2)]]
+//                                 ) {
+//        float4 textureColor = sourceTexture.sample(sourceSampler, vertexIn.textureCoordinate);
+//        float2 textureSize = float2(sourceTexture.get_width(), sourceTexture.get_height());
+////        int d = minDistance(sourceTexture, sourceSampler, position);
+//
+//        int width = sourceTexture.get_width();
+//        int height = sourceTexture.get_height();
+//        bool visited[20000][20000];
+//        for (int i = 0; i < width; i++) {
+//            for (int j = 0; j < height; j++) {
+//                visited[i][j] = false;
+//            }
+//        }
+//
+//        if (textureColor.a == 0) {
+//            return textureColor;
+//        } else if (isPossiblePathDPS(vertexIn.textureCoordinate * textureSize, position, textureSize, sourceTexture, backgroundTexture, backgroundSampler, color, thresholdSensitivity, visited)) {
+//            textureColor.rgb = color.rgb;
+//        }
+//
+////        float4 textureColorL = sourceTexture.sample(sourceSampler, float2((vertexIn.textureCoordinate.x * sourceTexture.get_width() - 1) / sourceTexture.get_width(), vertexIn.textureCoordinate.y));
+////        float4 textureColorR = sourceTexture.sample(sourceSampler, float2((vertexIn.textureCoordinate.x * sourceTexture.get_width() + 1) / sourceTexture.get_width(), vertexIn.textureCoordinate.y));
+////        float4 textureColorD = sourceTexture.sample(sourceSampler, float2(vertexIn.textureCoordinate.x, (vertexIn.textureCoordinate.y * sourceTexture.get_height() - 1) / sourceTexture.get_height()));
+////        float4 textureColorU = sourceTexture.sample(sourceSampler, float2(vertexIn.textureCoordinate.x, (vertexIn.textureCoordinate.y * sourceTexture.get_height() + 1) / sourceTexture.get_height()));
+//
+//
+////        if (textureColorL.a > 0 || textureColorR.a > 0 || textureColorD.a > 0 || textureColorU.a > 0) {
+////            textureColor.rgb = color.rgb;
+////        }
+//        return textureColor;
+////        else {
+////            textureColor.rgb = float3(1,1,0);
+////        }
+////        textureColor.a = 1.0;
+//
+//    }
+    
     fragment float4 rgbToneCurveAdjust(
                                    VertexOut vertexIn [[stage_in]],
                                    texture2d<float, access::sample> sourceTexture [[texture(0)]],

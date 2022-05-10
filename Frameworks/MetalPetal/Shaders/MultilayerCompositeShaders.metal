@@ -115,18 +115,19 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //                                                                    sampler maskSampler [[ sampler(2) ]],
                                                                     texture2d<float, access::sample> materialMaskTexture [[ texture(3) ]]
 //                                                                    sampler materialMaskSampler [[ sampler(3) ]]
-//                                                                    texture2d<float, access::sample> backgroundTexture [[ texture(3) ]],
+//                                                                    texture2d<float, access::sample> backgroundTexture [[ texture(4) ]]
 //                                                                    sampler backgroundSampler [[ sampler(3) ]],
 //                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(4) ]],
 //                                                                    sampler backgroundSamplerBeforeCurrentSession [[ sampler(4) ]]
                                                                     ) {
-    if (parameters.fillMode == 0
-        && currentColor.a > 0.99
-        && multilayer_composite_has_compositing_mask
-        && parameters.materialMaskType == 0
-        && parameters.materialMaskMovement == 1) {
-        discard_fragment();
-    }
+    
+//    if (parameters.fillMode == 0
+//        && currentColor.a > 0.99
+//        && multilayer_composite_has_compositing_mask
+//        && parameters.materialMaskType == 0
+//        && parameters.materialMaskMovement == 1) {
+//        discard_fragment();
+//    }
     
     float alpha = parameters.tintColor.a;
     
@@ -407,6 +408,9 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
             
             break;
         }
+        case 2: // replace
+            finalColor.rgba = textureColor.rgba;
+            break;
         default:
             break;
     }
