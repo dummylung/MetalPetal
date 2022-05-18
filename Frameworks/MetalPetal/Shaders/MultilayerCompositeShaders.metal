@@ -113,11 +113,11 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //                                                                    sampler compositingMaskSampler [[ sampler(1) ]],
                                                                     texture2d<float, access::sample> maskTexture [[ texture(2) ]],
 //                                                                    sampler maskSampler [[ sampler(2) ]],
-                                                                    texture2d<float, access::sample> materialMaskTexture [[ texture(3) ]]
+                                                                    texture2d<float, access::sample> materialMaskTexture [[ texture(3) ]],
 //                                                                    sampler materialMaskSampler [[ sampler(3) ]]
-//                                                                    texture2d<float, access::sample> backgroundTexture [[ texture(4) ]]
+                                                                    texture2d<float, access::sample> backgroundTexture [[ texture(4) ]],
 //                                                                    sampler backgroundSampler [[ sampler(3) ]],
-//                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(4) ]],
+                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(5) ]]
 //                                                                    sampler backgroundSamplerBeforeCurrentSession [[ sampler(4) ]]
                                                                     ) {
     
@@ -397,7 +397,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
             
             break;
         }
-        case 1: // substract
+        case 1: // subtract
         {
             finalColor.rgb = currentColor.rgb;
             finalColor.a = currentColor.a * (1-textureColor.a*(1-alpha));
@@ -405,10 +405,65 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
             if (finalColor.a <= 0.03) {
                 finalColor.a = 0;
             }
-            
+
             break;
         }
-        case 2: // replace
+        case 2: // smudge
+        {
+            constexpr sampler backgroundSampler(mag_filter::linear, min_filter::linear);
+            
+            float2 location = vertexIn.position.xy / parameters.canvasSize;
+            float4 backgroundColor = backgroundTexture.sample(backgroundSampler, location);
+//            finalColor = backgroundColor;
+            if (abs(backgroundColor.r-currentColor.r) > 0.01 || abs(backgroundColor.g-currentColor.g) > 0.01 || abs(backgroundColor.b-currentColor.b) > 0.01) {
+                discard_fragment();
+            }
+            
+            int level = 10;
+            int oneSideCount = (level*2)+1;
+            int totalCount = oneSideCount * oneSideCount;
+            float4 c = currentColor;
+            if (c.a == 0) {
+                c.rgb = 1;
+            }
+            int count = 1;
+
+            for (int i = 0; i < totalCount; i++) {
+                float2 p = float2(i % oneSideCount - level, i / oneSideCount - level);
+                if (p.x == 0 && p.y == 0) {
+                    continue;
+                }
+                float2 location = float2(vertexIn.position.x+p.x, vertexIn.position.y+p.y);
+                float2 centerlocation = vertexIn.position.xy;
+                float d = distance(location, centerlocation);
+                if (d > level) {
+                    continue;
+                }
+                float factor = 1.0;
+//                if (d < distance(location, parameters.lastPosition)) {
+////                    factor = 0.5;
+//                    continue;
+//                }
+                float4 color = backgroundTexture.sample(backgroundSampler, location / parameters.canvasSize);
+                if (color.a == 0) {
+                    color.rgb = 1;
+                }
+//                color = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(color) : color;
+
+                c = c + color;
+                count = count + factor;
+            }
+            c = c / count;
+//            finalColor = c.a * textureColor.a + currentColor * (1-textureColor.a);
+//            c.a = c.a * textureColor.a;
+            finalColor = c;
+            
+//            finalColor = blend(7, currentColor, c);
+            
+            break;
+            
+        }
+        case 3: // replace
             finalColor.rgba = textureColor.rgba;
             break;
         default:

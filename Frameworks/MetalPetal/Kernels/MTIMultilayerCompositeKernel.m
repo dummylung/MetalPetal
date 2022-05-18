@@ -516,6 +516,7 @@ __attribute__((objc_subclassing_restricted))
         CGSize layerStartPixelSize = [layer startSizeInPixelForBackgroundSize:backgroundImageSize];
         CGPoint layerPixelPosition = [layer positionInPixelForBackgroundSize:backgroundImageSize];
         CGPoint layerStartPixelPosition = [layer startPositionInPixelForBackgroundSize:backgroundImageSize];
+        CGPoint layerLastPixelPosition = [layer lastPositionInPixelForBackgroundSize:backgroundImageSize];
         
         MTIRenderPipeline *renderPipeline = [kernelState renderPipelineForLayer:layer error:&error];
         if (error) {
@@ -565,10 +566,10 @@ __attribute__((objc_subclassing_restricted))
 //            [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.materialMask.content] atIndex:3];
         }
         
-//        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImage] atIndex:4];
+        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImage] atIndex:4];
 //        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImage] atIndex:3];
         
-//        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
+        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImageBeforeCurrentSession] atIndex:5];
 //        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
         
         NSArray *allCases = MTIBlendModes.allCases;
@@ -580,6 +581,7 @@ __attribute__((objc_subclassing_restricted))
         parameters.tintColor = MTIColorToFloat4(layer.tintColor);
         parameters.layerSize = simd_make_float2(layerPixelSize.width, layerPixelSize.height);
         parameters.startPosition = simd_make_float2(layerStartPixelPosition.x, layerStartPixelPosition.y);
+        parameters.lastPosition = simd_make_float2(layerLastPixelPosition.x, layerLastPixelPosition.y);
         parameters.startLayerSize = simd_make_float2(layerStartPixelSize.width, layerStartPixelSize.height);
         parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
         parameters.fillMode = (int)layer.fillMode;
@@ -983,7 +985,7 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                                         depth2Inverted:materialMask.depth2Inverted
                                                             blendMode2:materialMask.blendMode2];
         }
-        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion mask:newMask compositingMask:newCompositingMask materialMask:newMaterialMask layoutUnit:layer.layoutUnit position:layer.position startPosition:layer.startPosition size:layer.size startSize:layer.startSize rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode renderingMode:layer.renderingMode renderingBlendMode:layer.renderingBlendMode fillMode:layer.fillMode shape:layer.shape];
+        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion mask:newMask compositingMask:newCompositingMask materialMask:newMaterialMask layoutUnit:layer.layoutUnit position:layer.position startPosition:layer.startPosition lastPosition:layer.lastPosition size:layer.size startSize:layer.startSize rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode renderingMode:layer.renderingMode renderingBlendMode:layer.renderingBlendMode fillMode:layer.fillMode shape:layer.shape];
         [newLayers addObject:newLayer];
     }
     return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage backgroundImageBeforeCurrentSession:backgroundImageBeforeCurrentSession layers:newLayers rasterSampleCount:_rasterSampleCount outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
