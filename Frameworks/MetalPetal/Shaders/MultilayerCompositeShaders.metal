@@ -102,7 +102,7 @@ float4 blend(int mode, float4 Cb, float4 Cs) {
 }
 
 fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilayerCompositingLayerVertexOut vertexIn [[ stage_in ]],
-                                                                    float4 currentColor [[color(0)]],
+                                                                    float4 currentColor [[color(0)]], // current color in pipeline
                                                                     constant MTIMultilayerCompositingLayerShadingParameters & parameters [[buffer(0)]],
 //                                                                    constant MTIMultilayerCompositingLayerSessionVertexes & sessionVertexes [[ buffer(1) ]],
 //                                                                    constant float4x4 & transformMatrix [[ buffer(2) ]],
@@ -128,6 +128,14 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //        && parameters.materialMaskMovement == 1) {
 //        discard_fragment();
 //    }
+    
+//    constexpr sampler s(coord::normalized, address::clamp_to_zero, filter::linear);
+    constexpr sampler backgroundSampler(mag_filter::linear, min_filter::linear);
+    float2 location = vertexIn.position.xy / parameters.canvasSize;
+    float4 backgroundTextureBeforeCurrentSessionColor = backgroundTextureBeforeCurrentSession.sample(backgroundSampler, location);
+    if (parameters.isAlphaLocked && backgroundTextureBeforeCurrentSessionColor.a == 0) {
+        discard_fragment();
+    }
     
     float alpha = parameters.tintColor.a;
     

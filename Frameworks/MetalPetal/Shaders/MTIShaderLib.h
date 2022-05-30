@@ -96,6 +96,7 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     int renderingMode;
     int renderingBlendMode;
     int fillMode;
+    int isAlphaLocked;
 };
 typedef struct MTIMultilayerCompositingLayerShadingParameters MTIMultilayerCompositingLayerShadingParameters;
 

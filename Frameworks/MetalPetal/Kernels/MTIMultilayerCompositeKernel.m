@@ -585,6 +585,7 @@ __attribute__((objc_subclassing_restricted))
         parameters.startLayerSize = simd_make_float2(layerStartPixelSize.width, layerStartPixelSize.height);
         parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
         parameters.fillMode = (int)layer.fillMode;
+        parameters.isAlphaLocked = (BOOL)layer.isAlphaLocked;
         parameters.renderingMode = (int)layer.renderingMode;
         parameters.renderingBlendMode = (int)[allCases indexOfObject:layer.renderingBlendMode];
         
@@ -827,6 +828,7 @@ __attribute__((objc_subclassing_restricted))
         parameters.layerSize = simd_make_float2(layerPixelSize.width, layerPixelSize.height);
         parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
         parameters.fillMode = (int)layer.fillMode;
+        parameters.isAlphaLocked = (BOOL)layer.isAlphaLocked;
         [commandEncoder setFragmentBytes:&parameters length:sizeof(parameters) atIndex:0];
         
         [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
@@ -985,7 +987,7 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                                         depth2Inverted:materialMask.depth2Inverted
                                                             blendMode2:materialMask.blendMode2];
         }
-        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion mask:newMask compositingMask:newCompositingMask materialMask:newMaterialMask layoutUnit:layer.layoutUnit position:layer.position startPosition:layer.startPosition lastPosition:layer.lastPosition size:layer.size startSize:layer.startSize rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode renderingMode:layer.renderingMode renderingBlendMode:layer.renderingBlendMode fillMode:layer.fillMode shape:layer.shape];
+        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion mask:newMask compositingMask:newCompositingMask materialMask:newMaterialMask layoutUnit:layer.layoutUnit position:layer.position startPosition:layer.startPosition lastPosition:layer.lastPosition size:layer.size startSize:layer.startSize rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode renderingMode:layer.renderingMode renderingBlendMode:layer.renderingBlendMode fillMode:layer.fillMode shape:layer.shape isAlphaLocked:layer.isAlphaLocked];
         [newLayers addObject:newLayer];
     }
     return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage backgroundImageBeforeCurrentSession:backgroundImageBeforeCurrentSession layers:newLayers rasterSampleCount:_rasterSampleCount outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
@@ -1041,7 +1043,7 @@ void MTIMultilayerCompositingRenderGraphNodeOptimize(MTIRenderGraphNode *node) {
                 layers = [lastPromise.layers arrayByAddingObjectsFromArray:layers];
                 MTIMultilayerCompositingRecipe *promise = [[MTIMultilayerCompositingRecipe alloc] initWithKernel:recipe.kernel
                                                                                                  backgroundImage:lastPromise.backgroundImage
-                                                                             backgroundImageBeforeCurrentSession:nil
+                                                                             backgroundImageBeforeCurrentSession:lastPromise.backgroundImageBeforeCurrentSession
                                                                                                           layers:layers
                                                                                                rasterSampleCount:MAX(recipe.rasterSampleCount,lastPromise.rasterSampleCount)
                                                                                                  outputAlphaType:recipe.alphaType

@@ -86,6 +86,8 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var shape: MTIShape
         
+        public var isAlphaLocked: Bool = false
+        
         public init(content: MTIImage) {
             self.content = content
             self.contentRegion = content.extent
@@ -127,6 +129,7 @@ public class MultilayerCompositingFilter: MTIFilter {
             hasher.combine(renderingBlendMode)
             hasher.combine(fillMode)
             hasher.combine(shape)
+            hasher.combine(isAlphaLocked)
         }
         
         private func mutating(_ block: (inout Layer) -> Void) -> Layer {
@@ -191,6 +194,10 @@ public class MultilayerCompositingFilter: MTIFilter {
             self.mutating({ $0.blendMode = blendMode })
         }
         
+        public func isAlphaLocked(_ isAlphaLocked: Bool) -> Layer {
+            self.mutating({ $0.isAlphaLocked = isAlphaLocked })
+        }
+        
         public func renderingBlendMode(_ renderingBlendMode: MTIBlendMode) -> Layer {
             self.mutating({ $0.renderingBlendMode = renderingBlendMode })
         }
@@ -233,10 +240,10 @@ public class MultilayerCompositingFilter: MTIFilter {
         set { internalFilter.inputBackgroundImage = newValue }
     }
     
-//    public var inputBackgroundImageBeforeCurrentSession: MTIImage? {
-//        get { internalFilter.inputBackgroundImageBeforeCurrentSession }
-//        set { internalFilter.inputBackgroundImageBeforeCurrentSession = newValue }
-//    }
+    public var inputBackgroundImageBeforeCurrentSession: MTIImage? {
+        get { internalFilter.inputBackgroundImageBeforeCurrentSession }
+        set { internalFilter.inputBackgroundImageBeforeCurrentSession = newValue }
+    }
     
     public var outputAlphaType: MTIAlphaType {
         get { internalFilter.outputAlphaType }
@@ -278,7 +285,7 @@ extension MultilayerCompositingFilter {
 
 extension MultilayerCompositingFilter.Layer {
     fileprivate func bridgeToObjectiveC() -> MTILayer {
-        return MTILayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, materialMask: self.materialMask, layoutUnit: self.layoutUnit, position: self.position, startPosition: self.startPosition, lastPosition: self.lastPosition, size: self.size, start: self.startSize, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, renderingMode: self.renderingMode, renderingBlendMode: self.renderingBlendMode, fillMode: self.fillMode, shape: self.shape)
+        return MTILayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, materialMask: self.materialMask, layoutUnit: self.layoutUnit, position: self.position, startPosition: self.startPosition, lastPosition: self.lastPosition, size: self.size, start: self.startSize, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, renderingMode: self.renderingMode, renderingBlendMode: self.renderingBlendMode, fillMode: self.fillMode, shape: self.shape, isAlphaLocked: self.isAlphaLocked)
     }
 }
 
