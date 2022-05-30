@@ -400,7 +400,7 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         case 1: // subtract
         {
             finalColor.rgb = currentColor.rgb;
-            finalColor.a = currentColor.a * (1-textureColor.a*(1-alpha));
+            finalColor.a = currentColor.a * (1-textureColor.a*alpha);
 
             if (finalColor.a <= 0.03) {
                 finalColor.a = 0;
