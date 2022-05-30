@@ -431,10 +431,11 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
             int oneSideCount = (level*2)+1;
             int totalCount = oneSideCount * oneSideCount;
             float4 c = currentColor;
-            if (c.a == 0) {
-                c.rgb = 1;
-            }
-            int count = 1;
+//            if (c.a == 0) {
+//                c.rgb = 1;
+//            }
+            int rgbCount = 1;
+            int aCount = 1;
 
             for (int i = 0; i < totalCount; i++) {
                 float2 p = float2(i % oneSideCount - level, i / oneSideCount - level);
@@ -454,14 +455,19 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //                }
                 float4 color = backgroundTexture.sample(backgroundSampler, location / parameters.canvasSize);
                 if (color.a == 0) {
-                    color.rgb = 1;
+//                    color.rgb = 1;
+//                    c.a = c.a + color.a;
+                    aCount = aCount + factor;
+                } else {
+                    c.rgb = c.rgb + color.rgb;
+                    rgbCount = rgbCount + factor;
+                    c.a = c.a + color.a;
+                    aCount = aCount + factor;
                 }
 //                color = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(color) : color;
-
-                c = c + color;
-                count = count + factor;
             }
-            c = c / count;
+            c.rgb = c.rgb / rgbCount;
+            c.a = c.a / aCount;
 //            finalColor = c.a * textureColor.a + currentColor * (1-textureColor.a);
 //            c.a = c.a * textureColor.a;
             finalColor = c;
