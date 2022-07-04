@@ -246,6 +246,25 @@ final class RenderTests: XCTestCase {
         }
     }
     
+    func testCoreImageTransform() throws {
+        let inputImage = MTIImage(cgImage: try ImageGenerator.makeMonochromeImage([
+            [0, 255, 128],
+        ]), isOpaque: true)
+        let mtiImage = MTICoreImageKernel.image(byProcessing: [inputImage], using: { image in
+            return image[0].transformed(by: CGAffineTransform(translationX: -1, y: 0))
+        }, outputDimensions: MTITextureDimensions(cgSize: CGSize(width: 2, height: 1)))
+        let context = try makeContext()
+        let cgImage = try context.makeCGImage(from: mtiImage)
+        PixelEnumerator.enumeratePixels(in: cgImage) { (pixel, coordinates) in
+            if coordinates.x == 0 && coordinates.y == 0 {
+                XCTAssertEqual(pixel, PixelEnumerator.Pixel(b: 255, g: 255, r: 255, a: 255))
+            }
+            if coordinates.x == 1 && coordinates.y == 0 {
+                XCTAssertEqual(pixel, PixelEnumerator.Pixel(b: 128, g: 128, r: 128, a: 255))
+            }
+        }
+    }
+    
     func testImageOrientations() throws {
         let image = MTIImage(cgImage: try ImageGenerator.makeMonochromeImage([
             [0, 0, 0],
@@ -1813,12 +1832,16 @@ final class RenderTests: XCTestCase {
         XCTAssert(outputImage.alphaType == .premultiplied)
         let context = try makeContext()
         let cgImage = try context.makeCGImage(from: outputImage)
+        
+        func linearToSRGB(_ c: Float, alpha: Float) -> Float {
+            let v = ((c < 0.0031308) ? (12.92 * c) : (1.055 * pow(c, 1.0/2.4) - 0.055))
+            return v * 255.0 * alpha //cgImage has premultiplied alpha
+        }
+        
         PixelEnumerator.enumeratePixels(in: cgImage) { (pixel, coordinates) in
             if coordinates.x == 0 && coordinates.y == 0 {
                 let c = inputValue
-                let value = UInt8(round(
-                    ((c < 0.0031308) ? (12.92 * c) : (1.055 * pow(c, 1.0/2.4) - 0.055)) * 255.0 * 0.5
-                ))
+                let value = UInt8(round(linearToSRGB(c, alpha: 0.5)))
                 XCTAssert(pixel.r == value && pixel.g == value && pixel.b == value && pixel.a == 128)
             }
         }
@@ -1830,12 +1853,16 @@ final class RenderTests: XCTestCase {
         XCTAssert(outputImage.alphaType == .nonPremultiplied)
         let context = try makeContext()
         let cgImage = try context.makeCGImage(from: outputImage)
+      
+        func linearToSRGB(_ c: Float, alpha: Float) -> Float {
+            let v = ((c < 0.0031308) ? (12.92 * c) : (1.055 * pow(c, 1.0/2.4) - 0.055))
+            return v * 255.0 * alpha //cgImage has premultiplied alpha
+        }
+        
         PixelEnumerator.enumeratePixels(in: cgImage) { (pixel, coordinates) in
             if coordinates.x == 0 && coordinates.y == 0 {
-                let c = 128.0/255.0
-                let value = UInt8(round(
-                    ((c < 0.0031308) ? (12.92 * c) : (1.055 * pow(c, 1.0/2.4) - 0.055)) * 255.0 * 0.5 // * 0.5 because cgImage has premultiplied alpha
-                ))
+                let c: Float = 128.0/255.0
+                let value = UInt8(round(linearToSRGB(c, alpha: 0.5)))
                 XCTAssert(pixel.r == value && pixel.g == value && pixel.b == value && pixel.a == 128)
             }
         }
