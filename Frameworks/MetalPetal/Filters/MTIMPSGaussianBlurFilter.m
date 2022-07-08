@@ -37,7 +37,7 @@
             MPSImageGaussianBlur *k = [[MPSImageGaussianBlur alloc] initWithDevice:device sigma:sigma];
             k.edgeMode = MPSImageEdgeModeClamp;
             return k;
-        }];
+        } alphaTypeHandlingRule:MTIAlphaTypeHandlingRule.passthroughAlphaTypeHandlingRule];
         kernels[@(radius)] = kernel;
     }
     [kernelsLock unlock];
