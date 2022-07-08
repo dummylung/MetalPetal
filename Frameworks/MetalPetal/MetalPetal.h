@@ -15,6 +15,7 @@
 #import "MTIFilter.h"
 #import "MTIHexagonalBokehBlurFilter.h"
 #import "MTIHighPassSkinSmoothingFilter.h"
+#import "MTIHSBFilter.h"
 #import "MTIImage+Filters.h"
 #import "MTIMPSBoxBlurFilter.h"
 #import "MTIMPSConvolutionFilter.h"

@@ -122,6 +122,39 @@ namespace metalpetal {
             float i = (1.0 - intensity) * (1.0 - intensityNeighbor);
             return float4(float3(i),textureColor.a);
         }
+        
+        fragment float4 hueSaturationBrightness(VertexOut vertexIn [[stage_in]],
+                                                texture2d<float, access::sample> sourceTexture [[texture(0)]],
+                                                sampler sourceSampler [[sampler(0)]],
+                                                constant float &hue [[buffer(0)]],
+                                                constant float &saturation [[buffer(1)]],
+                                                constant float &brightness [[buffer(2)]]) {
+            float4 textureColor = sourceTexture.sample(sourceSampler, vertexIn.textureCoordinate);
+            
+            float3 textureColorHSL = rgb2hsl(textureColor.rgb);
+            
+            float h = textureColorHSL.r + (-0.5 + hue);
+            if (h < 0) { h = h + 1; }
+            if (h > 1) { h = h - 1; }
+            
+            float s = textureColorHSL.g;
+            if (saturation < 0.5) {
+                s = s * saturation*2;
+            } else if (saturation > 0.5) {
+                s = s + (1-s) * (saturation-0.5)*2;
+            }
+            
+            float b = textureColorHSL.b;
+            if (brightness < 0.5) {
+                b = b * brightness*2;
+            } else if (brightness > 0.5) {
+                b = b + (1-b) * (brightness-0.5)*2;
+            }
+            
+            float3 textureColorRGB = hsl2rgb(float3(h,s,b));
+            
+            return float4(textureColorRGB, textureColor.a);
+        }
     }
 }
 
