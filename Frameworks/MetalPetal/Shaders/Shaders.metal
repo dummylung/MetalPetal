@@ -783,6 +783,34 @@ namespace metalpetal {
         return sourceTexture.sample(sourceSampler, textureCoordinate);
     }
     
+    fragment float4 liquify(VertexOut vertexIn [[stage_in]],
+                                    texture2d<float, access::sample> sourceTexture [[texture(0)]],
+                                    sampler sourceSampler [[sampler(0)]],
+                                    constant float2 & oldCenter [[ buffer(0) ]],
+                                    constant float2 & center [[ buffer(1) ]],
+                                    constant float & radius [[ buffer(2) ]],
+                                    constant float & pressure [[ buffer(3) ]]) {
+        
+        constexpr sampler textureSampler(mag_filter::bicubic, min_filter::bicubic);
+        
+        float2 textureSize = float2(sourceTexture.get_width(), sourceTexture.get_height());
+        float2 textureCoordinate = vertexIn.textureCoordinate;
+        
+        float2 texturePixelCoordinate = textureCoordinate * textureSize;
+        float dist = distance(texturePixelCoordinate, center);
+        
+        if (dist > radius) {
+            return sourceTexture.sample(textureSampler, textureCoordinate);
+        }
+        
+        float2 diff = (center - oldCenter) * (1-dist/radius) * pressure;
+        float2 oldPixelCoordinate = texturePixelCoordinate - diff;
+        
+        textureCoordinate = oldPixelCoordinate / textureSize;
+        
+        return sourceTexture.sample(textureSampler, textureCoordinate);
+    }
+    
     namespace definition {
         
         float4 meaningBlur(float4 im, float4 b) {
