@@ -15,6 +15,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 __attribute__((objc_subclassing_restricted))
+//@interface MTILiquifyFilter : NSObject <MTIUnaryFilter>
 @interface MTILiquifyFilter : MTIUnaryImageRenderingFilter
 
 /// Specifies the center of the distortion in pixels.
