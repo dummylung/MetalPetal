@@ -281,8 +281,9 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
         
         constexpr sampler materialMaskSampler(mag_filter::linear, min_filter::linear);
         float scale = parameters.materialMaskScale;
-        float zoom = parameters.materialMaskZoom*0.2+1;
-
+//        float zoom = parameters.materialMaskZoom*0.2+1;
+        float zoom = 1.0;
+        
         float x = 0;
         float y = 0;
         
