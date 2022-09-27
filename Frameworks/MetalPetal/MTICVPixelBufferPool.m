@@ -9,8 +9,11 @@
 
 NSString * const MTICVPixelBufferPoolErrorDomain = @"MTICVPixelBufferPoolErrorDomain";
 
+NSNotificationName const MTICVPixelBufferPoolIsOutOfBufferWarningNoticiation = @"MTICVPixelBufferPoolIsOutOfBufferWarningNoticiation";
+
 static void MTICVPixelBufferPoolIsOutOfBuffer(MTICVPixelBufferPool *pool) {
     NSLog(@"%@: Pool is out of buffers. Create a symbolic breakpoint of MTICVPixelBufferPoolIsOutOfBuffer to debug.",pool);
+    [[NSNotificationCenter defaultCenter] postNotificationName:MTICVPixelBufferPoolIsOutOfBufferWarningNoticiation object:nil userInfo:nil];
 }
 
 static NSString * MTICVPixelBufferPoolFourCharCodeToString(FourCharCode code) {
