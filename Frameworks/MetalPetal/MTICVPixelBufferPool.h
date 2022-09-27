@@ -10,6 +10,7 @@
 NS_ASSUME_NONNULL_BEGIN
 
 FOUNDATION_EXPORT NSString * const MTICVPixelBufferPoolErrorDomain;
+FOUNDATION_EXPORT NSNotificationName const MTICVPixelBufferPoolIsOutOfBufferWarningNoticiation;
 
 typedef NS_ERROR_ENUM(MTICVPixelBufferPoolErrorDomain, MTICVPixelBufferPoolError) {
     MTICVPixelBufferPoolErrorNone = kCVReturnSuccess,
