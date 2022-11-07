@@ -54,6 +54,8 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var materialMask: MTIMaterialMask? = nil
         
+        public var clippingMask: MTIMask? = nil
+        
         public var layoutUnit: MTILayer.LayoutUnit
         
         public var position: CGPoint
@@ -109,6 +111,7 @@ public class MultilayerCompositingFilter: MTIFilter {
             hasher.combine(mask)
             hasher.combine(compositingMask)
             hasher.combine(materialMask)
+            hasher.combine(clippingMask)
             hasher.combine(layoutUnit)
             hasher.combine(position.x)
             hasher.combine(position.y)
@@ -164,6 +167,10 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public func materialMask(_ mask: MTIMaterialMask?) -> Layer {
             self.mutating({ $0.materialMask = mask })
+        }
+        
+        public func clippingMask(_ mask: MTIMask?) -> Layer {
+            self.mutating({ $0.clippingMask = mask })
         }
         
         public func frame(_ rect: CGRect, layoutUnit: MTILayer.LayoutUnit) -> Layer {
@@ -285,7 +292,7 @@ extension MultilayerCompositingFilter {
 
 extension MultilayerCompositingFilter.Layer {
     fileprivate func bridgeToObjectiveC() -> MTILayer {
-        return MTILayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, materialMask: self.materialMask, layoutUnit: self.layoutUnit, position: self.position, startPosition: self.startPosition, lastPosition: self.lastPosition, size: self.size, start: self.startSize, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, renderingMode: self.renderingMode, renderingBlendMode: self.renderingBlendMode, fillMode: self.fillMode, shape: self.shape, isAlphaLocked: self.isAlphaLocked)
+        return MTILayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, materialMask: self.materialMask, clippingMask: self.clippingMask, layoutUnit: self.layoutUnit, position: self.position, startPosition: self.startPosition, lastPosition: self.lastPosition, size: self.size, start: self.startSize, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, renderingMode: self.renderingMode, renderingBlendMode: self.renderingBlendMode, fillMode: self.fillMode, shape: self.shape, isAlphaLocked: self.isAlphaLocked)
     }
 }
 

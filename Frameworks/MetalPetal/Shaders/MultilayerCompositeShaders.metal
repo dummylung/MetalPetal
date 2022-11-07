@@ -109,15 +109,17 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
 //                                                                    constant float4x4 & orthographicMatrix [[ buffer(3) ]],
                                                                     texture2d<float, access::sample> colorTexture [[ texture(0) ]],
 //                                                                    sampler colorSampler [[ sampler(0) ]],
+                                                                    
                                                                     texture2d<float, access::sample> compositingMaskTexture [[ texture(1) ]],
 //                                                                    sampler compositingMaskSampler [[ sampler(1) ]],
                                                                     texture2d<float, access::sample> maskTexture [[ texture(2) ]],
 //                                                                    sampler maskSampler [[ sampler(2) ]],
                                                                     texture2d<float, access::sample> materialMaskTexture [[ texture(3) ]],
+                                                                    texture2d<float, access::sample> clippingMaskTexture [[ texture(4) ]],
 //                                                                    sampler materialMaskSampler [[ sampler(3) ]]
-                                                                    texture2d<float, access::sample> backgroundTexture [[ texture(4) ]],
+                                                                    texture2d<float, access::sample> backgroundTexture [[ texture(5) ]],
 //                                                                    sampler backgroundSampler [[ sampler(3) ]],
-                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(5) ]]
+                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(6) ]]
 //                                                                    sampler backgroundSamplerBeforeCurrentSession [[ sampler(4) ]]
                                                                     ) {
     
@@ -135,6 +137,16 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
     float4 backgroundTextureBeforeCurrentSessionColor = backgroundTextureBeforeCurrentSession.sample(backgroundSampler, location);
     if (parameters.isAlphaLocked && backgroundTextureBeforeCurrentSessionColor.a == 0) {
         discard_fragment();
+    }
+    
+    float clippingMaskValue = 1;
+    if (multilayer_composite_has_clipping_mask) {
+        constexpr sampler clippingMaskSampler(mag_filter::linear, min_filter::linear);
+        float4 clippingMaskTextureColor = clippingMaskTexture.sample(clippingMaskSampler, location);
+        clippingMaskValue = clippingMaskTextureColor[parameters.clippingMaskComponent];
+        if (clippingMaskValue < 0.01) {
+            discard_fragment();
+        }
     }
     
     float alpha = parameters.tintColor.a;
@@ -483,6 +495,14 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(MTIMultilaye
             break;
         default:
             break;
+    }
+    
+    if (multilayer_composite_has_clipping_mask) {
+        if (clippingMaskValue > 0.01) {
+            finalColor.a = min(finalColor.a, clippingMaskValue);
+        } else {
+            finalColor.a = 0;
+        }
     }
     
     return finalColor;

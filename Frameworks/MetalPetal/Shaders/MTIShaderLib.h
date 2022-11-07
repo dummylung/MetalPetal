@@ -55,6 +55,8 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     bool maskHasPremultipliedAlpha;
     bool maskUsesOneMinusValue;
     
+    int clippingMaskComponent;
+    
     int compositingMaskComponent;
     bool compositingMaskHasPremultipliedAlpha;
     bool compositingMaskUsesOneMinusValue;
