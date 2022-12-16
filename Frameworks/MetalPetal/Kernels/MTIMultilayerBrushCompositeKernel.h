@@ -1,5 +1,5 @@
 //
-//  MTIMultilayerRenderPipelineKernel.h
+//  MTIMultilayerBrushCompositeKernel.h
 //  MetalPetal
 //
 //  Created by YuAo on 27/09/2017.
@@ -18,13 +18,16 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class MTIRenderPipeline, MTIFunctionDescriptor, MTIContext, MTIImage, MTILayer;
+@class MTIRenderPipeline, MTIFunctionDescriptor, MTIContext, MTIImage, MTIBrushLayer, MTIBlendFunctionDescriptors;
 
 __attribute__((objc_subclassing_restricted))
-@interface MTIMultilayerCompositeKernel : NSObject <MTIKernel>
+@interface MTIMultilayerBrushCompositeKernel : NSObject <MTIKernel>
+
++ (MTIBlendFunctionDescriptors *)blendFunctionDescriptors;
 
 - (MTIImage *)applyToBackgroundImage:(MTIImage *)image
-                              layers:(NSArray<MTILayer *> *)layers
+ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSession
+                              layers:(NSArray<MTIBrushLayer *> *)layers
                    rasterSampleCount:(NSUInteger)rasterSampleCount
                      outputAlphaType:(MTIAlphaType)outputAlphaType
              outputTextureDimensions:(MTITextureDimensions)outputTextureDimensions

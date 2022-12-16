@@ -10,38 +10,26 @@
 #import <MetalPetal/MTIBlendModes.h>
 #import <MetalPetal/MTIColor.h>
 #import <MetalPetal/MTICorner.h>
-#import <MetalPetal/MTIShape.h>
-#import <MetalPetal/MTIMaterialMask.h>
 #else
 #import "MTIBlendModes.h"
 #import "MTIColor.h"
 #import "MTICorner.h"
-#import "MTIShape.h"
-#import "MTIMaterialMask.h"
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
 
-@class MTIImage, MTIMask, MTIMaterialMask;
+@class MTIImage, MTIMask;
 
 typedef NS_CLOSED_ENUM(NSInteger, MTILayerLayoutUnit) {
     MTILayerLayoutUnitPixel,
     MTILayerLayoutUnitFractionOfBackgroundSize
 } NS_SWIFT_NAME(MTILayer.LayoutUnit);
 
-
-typedef NS_ENUM(NSInteger, MTILayerFillMode) {
-    MTILayerFillModeNormal,
-    MTILayerFillModeSubtract,
-    MTILayerFillModeSmudge,
-    MTILayerFillModeReplace,
-} NS_SWIFT_NAME(MTILayer.FillMode);
-
-typedef NS_ENUM(NSInteger, MTILayerRenderingMode) {
-    MTILayerRenderingModeLightGlaze,
-    MTILayerRenderingModeIntenseBlending
-} NS_SWIFT_NAME(MTILayer.RenderingMode);
-
+typedef NS_OPTIONS(NSUInteger, MTILayerFlipOptions) {
+    MTILayerFlipOptionsDonotFlip = 0,
+    MTILayerFlipOptionsFlipVertically = 1 << 0,
+    MTILayerFlipOptionsFlipHorizontally = 1 << 1,
+} NS_SWIFT_NAME(MTILayer.FlipOptions);
 
 /// A MTILayer represents a compositing layer for MTIMultilayerCompositingFilter. MTILayers use a UIKit like coordinate system.
 __attribute__((objc_subclassing_restricted))
@@ -51,27 +39,19 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic, readonly) CGRect contentRegion; //pixel
 
+@property (nonatomic, readonly) MTILayerFlipOptions contentFlipOptions;
+
 /// A mask that applies to the `content` of the layer. This mask is resized and aligned with the layer.
 @property (nonatomic, strong, readonly, nullable) MTIMask *mask;
 
-@property (nonatomic, strong, readonly, nullable) MTIMask *clippingMask;
-
 /// A mask that applies to the `content` of the layer. This mask is resized and aligned with the background.
 @property (nonatomic, strong, readonly, nullable) MTIMask *compositingMask;
-
-@property (nonatomic, strong, readonly, nullable) MTIMaterialMask *materialMask;
 
 @property (nonatomic, readonly) MTILayerLayoutUnit layoutUnit;
 
 @property (nonatomic, readonly) CGPoint position;
 
-@property (nonatomic, readonly) CGPoint startPosition;
-
-@property (nonatomic, readonly) CGPoint lastPosition;
-
 @property (nonatomic, readonly) CGSize size;
-
-@property (nonatomic, readonly) CGSize startSize;
 
 @property (nonatomic, readonly) float rotation; //rad
 
@@ -86,40 +66,24 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic, copy, readonly) MTIBlendMode blendMode;
 
-@property (nonatomic, readonly) MTILayerRenderingMode renderingMode;
-
-@property (nonatomic, copy, readonly) MTIBlendMode renderingBlendMode;
-
-@property (nonatomic, readonly) MTILayerFillMode fillMode;
-
-@property (nonatomic, readonly) MTIShape *shape;
-
-@property (nonatomic, readonly) BOOL *isAlphaLocked;
-
 - (instancetype)init NS_UNAVAILABLE;
 + (instancetype)new NS_UNAVAILABLE;
 
-//- (instancetype)initWithContent:(MTIImage *)content layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
-//
-//- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
-//
-//- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
-//
-//- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
-//
-//- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
+- (instancetype)initWithContent:(MTIImage *)content layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask materialMask:(nullable MTIMaterialMask *)materialMask clippingMask:(nullable MTIMask *)clippingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position startPosition:(CGPoint)startPosition lastPosition:(CGPoint)lastPosition size:(CGSize)size startSize:(CGSize)startSize rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode renderingMode:(MTILayerRenderingMode)renderingMode renderingBlendMode:(MTIBlendMode)renderingBlendMode fillMode:(MTILayerFillMode)fillMode shape:(MTIShape *)shape isAlphaLocked:(BOOL)isAlphaLocked NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
+
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode;
+
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
+
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode;
+
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
 
 - (CGSize)sizeInPixelForBackgroundSize:(CGSize)backgroundSize;
 
-- (CGSize)startSizeInPixelForBackgroundSize:(CGSize)backgroundSize;
-
 - (CGPoint)positionInPixelForBackgroundSize:(CGSize)backgroundSize;
-
-- (CGPoint)startPositionInPixelForBackgroundSize:(CGSize)backgroundSize;
-
-- (CGPoint)lastPositionInPixelForBackgroundSize:(CGSize)backgroundSize;
 
 @end
 

@@ -51,7 +51,11 @@ typedef NS_ENUM(NSInteger, MTIMaskType) {
 
 - (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode type:(MTIMaskType)type movement:(CGFloat)movement scale:(CGFloat)scale zoom:(CGFloat)zoom rotation:(CGFloat)rotation depth:(CGFloat)depth offsetJitter:(CGPoint)offsetJitter blendMode:(MTIBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
 
+- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode;
+
 - (instancetype)initWithContent:(MTIImage *)content;
+
+
 
 @end
 

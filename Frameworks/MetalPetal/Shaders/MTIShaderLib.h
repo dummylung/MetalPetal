@@ -39,7 +39,7 @@ struct MTICLAHELUTGeneratorInputParameters {
 };
 typedef struct MTICLAHELUTGeneratorInputParameters MTICLAHELUTGeneratorInputParameters;
 
-struct MTIMultilayerCompositingLayerShadingParameters {
+struct MTIMultilayerBrushCompositingLayerShadingParameters {
     vector_float2 canvasSize;
     
     float opacity;
@@ -100,7 +100,41 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     int fillMode;
     int isAlphaLocked;
 };
+typedef struct MTIMultilayerBrushCompositingLayerShadingParameters MTIMultilayerBrushCompositingLayerShadingParameters;
+
+struct MTIMultilayerBrushCompositingLayerVertex {
+    vector_float4 position;
+    vector_float2 textureCoordinate;
+    vector_float2 positionInLayer;
+};
+typedef struct MTIMultilayerBrushCompositingLayerVertex MTIMultilayerBrushCompositingLayerVertex;
+
+struct MTIMultilayerCompositingLayerShadingParameters {
+    vector_float2 canvasSize;
+    
+    float opacity;
+    
+    int maskComponent;
+    bool maskHasPremultipliedAlpha;
+    bool maskUsesOneMinusValue;
+    
+    int compositingMaskComponent;
+    bool compositingMaskHasPremultipliedAlpha;
+    bool compositingMaskUsesOneMinusValue;
+    
+    vector_float4 tintColor;
+    vector_float4 cornerRadius;
+    
+    vector_float2 layerSize;
+};
 typedef struct MTIMultilayerCompositingLayerShadingParameters MTIMultilayerCompositingLayerShadingParameters;
+
+struct MTIMultilayerCompositingLayerVertex {
+    vector_float4 position;
+    vector_float2 textureCoordinate;
+    vector_float2 positionInLayer;
+};
+typedef struct MTIMultilayerCompositingLayerVertex MTIMultilayerCompositingLayerVertex;
 
 //struct MTIMultilayerCompositingLayerSessionVertex {
 //    vector_float4 position;
@@ -114,12 +148,6 @@ typedef struct MTIMultilayerCompositingLayerShadingParameters MTIMultilayerCompo
 //};
 //typedef struct MTIMultilayerCompositingLayerSessionVertexes MTIMultilayerCompositingLayerSessionVertexes;
 
-struct MTIMultilayerCompositingLayerVertex {
-    vector_float4 position;
-    vector_float2 textureCoordinate;
-    vector_float2 positionInLayer;
-};
-typedef struct MTIMultilayerCompositingLayerVertex MTIMultilayerCompositingLayerVertex;
 
 
 #ifdef __METAL_VERSION__
@@ -143,6 +171,17 @@ namespace metalpetal {
         float4 currentColor [[color(0)]];
         float4 sessionColor [[color(1)]];
     } MTIMultilayerCompositingLayerFragmentOut;
+
+    typedef struct {
+        float4 position [[ position ]];
+        float2 textureCoordinate;
+        float2 positionInLayer;
+    } MTIMultilayerBrushCompositingLayerVertexOut;
+
+    typedef struct {
+        float4 currentColor [[color(0)]];
+        float4 sessionColor [[color(1)]];
+    } MTIMultilayerBrushCompositingLayerFragmentOut;
 
     // GLSL mod func for metal
     template <typename T, typename _E = typename enable_if<is_floating_point<typename make_scalar<T>::type>::value>::type>

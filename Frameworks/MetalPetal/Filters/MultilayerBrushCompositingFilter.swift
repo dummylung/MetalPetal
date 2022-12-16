@@ -1,5 +1,5 @@
 //
-//  MTIMultilayerCompositingFilter.swift
+//  MTIMultilayerBrushCompositingFilter.swift
 //  MetalPetal
 //
 //  Created by Yu Ao on 2019/12/4.
@@ -13,34 +13,7 @@ import Metal
 import MetalPetalObjectiveC.Core
 #endif
 
-extension MTILayer.FlipOptions: Hashable {
-    
-}
-
-extension MTILayer.LayoutUnit: Hashable {
-    
-}
-
-extension MTILayer.LayoutUnit: CustomDebugStringConvertible, CustomStringConvertible {
-    public var debugDescription: String {
-        return self.name
-    }
-    
-    public var description: String {
-        return self.name
-    }
-    
-    private var name: String {
-        switch self {
-        case .fractionOfBackgroundSize:
-            return "MTILayer.LayoutUnit.fractionOfBackgroundSize"
-        case .pixel:
-            return "MTILayer.LayoutUnit.pixel"
-        }
-    }
-}
-
-public class MultilayerCompositingFilter: MTIFilter {
+public class MultilayerBrushCompositingFilter: MTIFilter {
     
     public struct Layer: Hashable, Equatable {
         
@@ -48,17 +21,25 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var contentRegion: CGRect
         
-        public var contentFlipOptions: MTILayer.FlipOptions = []
-        
         public var mask: MTIMask? = nil
         
         public var compositingMask: MTIMask? = nil
         
-        public var layoutUnit: MTILayer.LayoutUnit
+        public var materialMask: MTIMaterialMask? = nil
+        
+        public var clippingMask: MTIMask? = nil
+        
+        public var layoutUnit: MTIBrushLayer.LayoutUnit
         
         public var position: CGPoint
         
+        public var startPosition: CGPoint
+        
+        public var lastPosition: CGPoint
+        
         public var size: CGSize
+        
+        public var startSize: CGSize
         
         public var rotation: Float = 0
         
@@ -72,12 +53,26 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var blendMode: MTIBlendMode = .normal
         
+        public var renderingMode: MTIBrushLayer.RenderingMode = .lightGlaze
+        
+        public var renderingBlendMode: MTIBlendMode = .normal
+        
+        public var fillMode: MTIBrushLayer.FillMode = .normal
+        
+        public var shape: MTIShape
+        
+        public var isAlphaLocked: Bool = false
+        
         public init(content: MTIImage) {
             self.content = content
             self.contentRegion = content.extent
             self.layoutUnit = .pixel
             self.size = content.size
+            self.startSize = size
             self.position = CGPoint(x: content.size.width/2, y: content.size.height/2)
+            self.startPosition = CGPoint(x: content.size.width/2, y: content.size.height/2)
+            self.lastPosition = CGPoint(x: content.size.width/2, y: content.size.height/2)
+            self.shape = MTIShape()
         }
         
         public func hash(into hasher: inout Hasher) {
@@ -86,20 +81,31 @@ public class MultilayerCompositingFilter: MTIFilter {
             hasher.combine(contentRegion.origin.y)
             hasher.combine(contentRegion.size.width)
             hasher.combine(contentRegion.size.height)
-            hasher.combine(contentFlipOptions)
             hasher.combine(mask)
             hasher.combine(compositingMask)
+            hasher.combine(materialMask)
+            hasher.combine(clippingMask)
             hasher.combine(layoutUnit)
             hasher.combine(position.x)
             hasher.combine(position.y)
+            hasher.combine(startPosition.x)
+            hasher.combine(startPosition.y)
+            hasher.combine(lastPosition.x)
+            hasher.combine(lastPosition.y)
             hasher.combine(size.width)
             hasher.combine(size.height)
+            hasher.combine(startSize.width)
+            hasher.combine(startSize.height)
             hasher.combine(rotation)
             hasher.combine(opacity)
             hasher.combine(cornerRadius)
             hasher.combine(cornerCurve)
             hasher.combine(tintColor)
             hasher.combine(blendMode)
+            hasher.combine(renderingBlendMode)
+            hasher.combine(fillMode)
+            hasher.combine(shape)
+            hasher.combine(isAlphaLocked)
         }
         
         private func mutating(_ block: (inout Layer) -> Void) -> Layer {
@@ -124,10 +130,6 @@ public class MultilayerCompositingFilter: MTIFilter {
             self.mutating({ $0.contentRegion = contentRegion })
         }
         
-        public func contentFlipOptions(_ contentFlipOptions: MTILayer.FlipOptions) -> Layer {
-            self.mutating({ $0.contentFlipOptions = contentFlipOptions })
-        }
-        
         public func mask(_ mask: MTIMask?) -> Layer {
             self.mutating({ $0.mask = mask })
         }
@@ -136,7 +138,15 @@ public class MultilayerCompositingFilter: MTIFilter {
             self.mutating({ $0.compositingMask = mask })
         }
         
-        public func frame(_ rect: CGRect, layoutUnit: MTILayer.LayoutUnit) -> Layer {
+        public func materialMask(_ mask: MTIMaterialMask?) -> Layer {
+            self.mutating({ $0.materialMask = mask })
+        }
+        
+        public func clippingMask(_ mask: MTIMask?) -> Layer {
+            self.mutating({ $0.clippingMask = mask })
+        }
+        
+        public func frame(_ rect: CGRect, layoutUnit: MTIBrushLayer.LayoutUnit) -> Layer {
             self.mutating({
                 $0.size = rect.size
                 $0.position = CGPoint(x: rect.midX, y: rect.midY)
@@ -144,7 +154,7 @@ public class MultilayerCompositingFilter: MTIFilter {
             })
         }
         
-        public func frame(center: CGPoint, size: CGSize, layoutUnit: MTILayer.LayoutUnit) -> Layer {
+        public func frame(center: CGPoint, size: CGSize, layoutUnit: MTIBrushLayer.LayoutUnit) -> Layer {
             self.mutating({
                 $0.size = size
                 $0.position = center
@@ -162,6 +172,14 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public func blendMode(_ blendMode: MTIBlendMode) -> Layer {
             self.mutating({ $0.blendMode = blendMode })
+        }
+        
+        public func isAlphaLocked(_ isAlphaLocked: Bool) -> Layer {
+            self.mutating({ $0.isAlphaLocked = isAlphaLocked })
+        }
+        
+        public func renderingBlendMode(_ renderingBlendMode: MTIBlendMode) -> Layer {
+            self.mutating({ $0.renderingBlendMode = renderingBlendMode })
         }
         
         public func corner(radius: MTICornerRadius, curve: MTICornerCurve) -> Layer {
@@ -182,6 +200,10 @@ public class MultilayerCompositingFilter: MTIFilter {
         public func cornerCurve(_ curve: MTICornerCurve) -> Layer {
             self.mutating({ $0.cornerCurve = curve })
         }
+        
+        public func fillMode(_ fillMode: MTIBrushLayer.FillMode) -> Layer {
+            self.mutating({ $0.fillMode = fillMode })
+        }
     }
     
     public var outputPixelFormat: MTLPixelFormat {
@@ -196,6 +218,11 @@ public class MultilayerCompositingFilter: MTIFilter {
     public var inputBackgroundImage: MTIImage? {
         get { internalFilter.inputBackgroundImage }
         set { internalFilter.inputBackgroundImage = newValue }
+    }
+    
+    public var inputBackgroundImageBeforeCurrentSession: MTIImage? {
+        get { internalFilter.inputBackgroundImageBeforeCurrentSession }
+        set { internalFilter.inputBackgroundImageBeforeCurrentSession = newValue }
     }
     
     public var outputAlphaType: MTIAlphaType {
@@ -220,15 +247,15 @@ public class MultilayerCompositingFilter: MTIFilter {
         get { Int(internalFilter.rasterSampleCount) }
     }
     
-    private var internalFilter = MTIMultilayerCompositingFilter()
+    private var internalFilter = MTIMultilayerBrushCompositingFilter()
     
     public init() {
         
     }
 }
 
-extension MultilayerCompositingFilter {
-    @available(*, deprecated, message: "Use MultilayerCompositingFilter.Layer(content:).frame(...).opacity(...)... instead.")
+extension MultilayerBrushCompositingFilter {
+    @available(*, deprecated, message: "Use MultilayerBrushCompositingFilter.Layer(content:).frame(...).opacity(...)... instead.")
     public static func makeLayer(content: MTIImage, configurator: (_ layer: inout Layer) -> Void) -> Layer {
         var layer = Layer(content: content)
         configurator(&layer)
@@ -236,17 +263,17 @@ extension MultilayerCompositingFilter {
     }
 }
 
-extension MultilayerCompositingFilter.Layer {
-    fileprivate func bridgeToObjectiveC() -> MTILayer {
-        return MTILayer(content: self.content, contentRegion: self.contentRegion, contentFlipOptions: self.contentFlipOptions, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode)
+extension MultilayerBrushCompositingFilter.Layer {
+    fileprivate func bridgeToObjectiveC() -> MTIBrushLayer {
+        return MTIBrushLayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, materialMask: self.materialMask, clippingMask: self.clippingMask, layoutUnit: self.layoutUnit, position: self.position, startPosition: self.startPosition, lastPosition: self.lastPosition, size: self.size, start: self.startSize, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, renderingMode: self.renderingMode, renderingBlendMode: self.renderingBlendMode, fillMode: self.fillMode, shape: self.shape, isAlphaLocked: self.isAlphaLocked)
     }
 }
 
-extension MultilayerCompositingFilter.Layer: CustomDebugStringConvertible, CustomStringConvertible {
+extension MultilayerBrushCompositingFilter.Layer: CustomDebugStringConvertible, CustomStringConvertible {
     public var debugDescription: String {
         let mirror = Mirror(reflecting: self)
         let members: String = mirror.children.reduce("", { r, c in "\(r)\(c.label ?? "(null)") = \(c.value); " })
-        return "<MultilayerCompositingFilter.Layer> { \(members)}"
+        return "<MultilayerBrushCompositingFilter.Layer> { \(members)}"
     }
     
     public var description: String {

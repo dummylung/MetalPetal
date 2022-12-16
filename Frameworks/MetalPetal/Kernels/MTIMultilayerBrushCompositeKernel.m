@@ -1,11 +1,11 @@
 //
-//  MTIMultilayerRenderPipelineKernel.m
+//  MTIMultilayerBrushCompositeKernel.m
 //  MetalPetal
 //
 //  Created by YuAo on 27/09/2017.
 //
 
-#import "MTIMultilayerCompositeKernel.h"
+#import "MTIMultilayerBrushCompositeKernel.h"
 #import "MTIContext.h"
 #import "MTIFunctionDescriptor.h"
 #import "MTIImage.h"
@@ -18,7 +18,7 @@
 #import "MTIFilter.h"
 #import "MTIDefer.h"
 #import "MTITransform.h"
-#import "MTILayer.h"
+#import "MTIBrushLayer.h"
 #import "MTIImagePromiseDebug.h"
 #import "MTIContext+Internal.h"
 #import "MTIError.h"
@@ -28,14 +28,14 @@
 #import "MTILock.h"
 
 __attribute__((objc_subclassing_restricted))
-@interface MTIMultilayerCompositeKernelConfiguration: NSObject <MTIKernelConfiguration>
+@interface MTIMultilayerBrushCompositeKernelConfiguration: NSObject <MTIKernelConfiguration>
 
 @property (nonatomic,readonly) MTLPixelFormat outputPixelFormat;
 @property (nonatomic,readonly) NSUInteger rasterSampleCount;
 
 @end
 
-@implementation MTIMultilayerCompositeKernelConfiguration
+@implementation MTIMultilayerBrushCompositeKernelConfiguration
 
 - (instancetype)initWithOutputPixelFormat:(MTLPixelFormat)pixelFormat rasterSampleCount:(NSUInteger)rasterSampleCount {
     if (self = [super init]) {
@@ -64,8 +64,8 @@ __attribute__((objc_subclassing_restricted))
     if (self == object) {
         return YES;
     }
-    MTIMultilayerCompositeKernelConfiguration *obj = object;
-    if ([obj isKindOfClass:MTIMultilayerCompositeKernelConfiguration.class] && obj -> _outputPixelFormat == _outputPixelFormat && obj -> _rasterSampleCount == _rasterSampleCount) {
+    MTIMultilayerBrushCompositeKernelConfiguration *obj = object;
+    if ([obj isKindOfClass:MTIMultilayerBrushCompositeKernelConfiguration.class] && obj -> _outputPixelFormat == _outputPixelFormat && obj -> _rasterSampleCount == _rasterSampleCount) {
         return YES;
     } else {
         return NO;
@@ -74,24 +74,28 @@ __attribute__((objc_subclassing_restricted))
 
 @end
 
-@interface MTILayerRenderPipelineKey : NSObject <NSCopying> {
+@interface MTIBrushLayerRenderPipelineKey : NSObject <NSCopying> {
     BOOL _contentHasPremultipliedAlpha;
     BOOL _hasContentMask;
     BOOL _hasCompositingMask;
+    BOOL _hasMaterialMask;
+    BOOL _hasClippingMask;
     BOOL _hasTintColor;
     short _cornerCurveType; // none: 0, circular: 1, continuous: 2
 }
 @property (nonatomic, copy, readonly) MTIBlendMode blendMode;
 @end
 
-@implementation MTILayerRenderPipelineKey
+@implementation MTIBrushLayerRenderPipelineKey
 
-- (instancetype)initWithLayer:(MTILayer *)layer {
+- (instancetype)initWithLayer:(MTIBrushLayer *)layer {
     if (self = [super init]) {
         _blendMode = layer.blendMode;
         _contentHasPremultipliedAlpha = layer.content.alphaType == MTIAlphaTypePremultiplied;
         _hasContentMask = layer.mask != nil;
         _hasCompositingMask = layer.compositingMask != nil;
+        _hasMaterialMask = layer.materialMask != nil;
+        _hasClippingMask = layer.clippingMask != nil;
         _hasTintColor = layer.tintColor.alpha > 0;
         switch (layer.cornerCurve) {
             case MTICornerCurveCircular:
@@ -116,12 +120,14 @@ __attribute__((objc_subclassing_restricted))
 }
 
 - (BOOL)isEqual:(id)object {
-    if ([object isKindOfClass:[MTILayerRenderPipelineKey class]]) {
-        MTILayerRenderPipelineKey *other = object;
+    if ([object isKindOfClass:[MTIBrushLayerRenderPipelineKey class]]) {
+        MTIBrushLayerRenderPipelineKey *other = object;
         return [other->_blendMode isEqualToString:_blendMode] &&
         other->_contentHasPremultipliedAlpha == _contentHasPremultipliedAlpha &&
         other->_hasContentMask == _hasContentMask &&
         other->_hasCompositingMask == _hasCompositingMask &&
+        other->_hasMaterialMask == _hasMaterialMask &&
+        other->_hasClippingMask == _hasClippingMask &&
         other->_hasTintColor == _hasTintColor &&
         other->_cornerCurveType == _cornerCurveType;
     }
@@ -134,6 +140,8 @@ __attribute__((objc_subclassing_restricted))
     MTIHasherCombine(&hasher, (uint64_t)_contentHasPremultipliedAlpha);
     MTIHasherCombine(&hasher, (uint64_t)_hasContentMask);
     MTIHasherCombine(&hasher, (uint64_t)_hasCompositingMask);
+    MTIHasherCombine(&hasher, (uint64_t)_hasMaterialMask);
+    MTIHasherCombine(&hasher, (uint64_t)_hasClippingMask);
     MTIHasherCombine(&hasher, (uint64_t)_hasTintColor);
     MTIHasherCombine(&hasher, (uint64_t)_cornerCurveType);
     return MTIHasherFinalize(&hasher);
@@ -142,9 +150,9 @@ __attribute__((objc_subclassing_restricted))
 - (MTIFunctionDescriptor *)createFragmentFunctionDescriptor:(BOOL)usesProgrammableBlending {
     MTIFunctionDescriptor *fragmentFunctionDescriptorForBlending;
     if (usesProgrammableBlending) {
-        fragmentFunctionDescriptorForBlending = [MTIBlendModes functionDescriptorsForBlendMode:_blendMode].fragmentFunctionDescriptorForMultilayerCompositingFilterWithProgrammableBlending;
+        fragmentFunctionDescriptorForBlending = [MTIMultilayerBrushCompositeKernel blendFunctionDescriptors].fragmentFunctionDescriptorForMultilayerCompositingFilterWithProgrammableBlending;
     } else {
-        fragmentFunctionDescriptorForBlending = [MTIBlendModes functionDescriptorsForBlendMode:_blendMode].fragmentFunctionDescriptorForMultilayerCompositingFilterWithoutProgrammableBlending;
+        fragmentFunctionDescriptorForBlending = [MTIMultilayerBrushCompositeKernel blendFunctionDescriptors].fragmentFunctionDescriptorForMultilayerCompositingFilterWithoutProgrammableBlending;
     }
     if (!fragmentFunctionDescriptorForBlending) {
         return nil;
@@ -153,6 +161,8 @@ __attribute__((objc_subclassing_restricted))
     [constants setConstantValue:&_contentHasPremultipliedAlpha type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_content_premultiplied"];
     [constants setConstantValue:&_hasContentMask type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_mask"];
     [constants setConstantValue:&_hasCompositingMask type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_compositing_mask"];
+    [constants setConstantValue:&_hasMaterialMask type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_material_mask"];
+    [constants setConstantValue:&_hasClippingMask type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_clipping_mask"];
     [constants setConstantValue:&_hasTintColor type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_tint_color"];
     [constants setConstantValue:&_cornerCurveType type:MTLDataTypeShort withName:@"metalpetal::multilayer_composite_corner_curve_type"];
     return [fragmentFunctionDescriptorForBlending functionDescriptorWithConstantValues:constants];
@@ -161,7 +171,7 @@ __attribute__((objc_subclassing_restricted))
 @end
 
 __attribute__((objc_subclassing_restricted))
-@interface MTIMultilayerCompositeKernelState: NSObject
+@interface MTIMultilayerBrushCompositeKernelState: NSObject
 
 @property (nonatomic,unsafe_unretained,readonly) MTIContext *context;
 
@@ -175,11 +185,11 @@ __attribute__((objc_subclassing_restricted))
 @property (nonatomic,copy,readonly) MTIRenderPipeline *alphaToOneInPlaceRenderPipeline;
 
 @property (nonatomic,strong,readonly) id<MTILocking> layerPipelineCacheLock;
-@property (nonatomic,strong,readonly) NSMutableDictionary<MTILayerRenderPipelineKey *, MTIRenderPipeline *> *layerPipelines;
+@property (nonatomic,strong,readonly) NSMutableDictionary<MTIBrushLayerRenderPipelineKey *, MTIRenderPipeline *> *layerPipelines;
 
 @end
 
-@implementation MTIMultilayerCompositeKernelState
+@implementation MTIMultilayerBrushCompositeKernelState
 
 + (MTIRenderPipeline *)renderPipelineWithFragmentFunctionName:(NSString *)fragmentFunctionName colorAttachmentDescriptor:(MTLRenderPipelineColorAttachmentDescriptor *)colorAttachmentDescriptor rasterSampleCount:(NSUInteger)rasterSampleCount context:(MTIContext *)context error:(NSError * __autoreleasing *)inOutError {
     MTLRenderPipelineDescriptor *renderPipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
@@ -225,7 +235,7 @@ __attribute__((objc_subclassing_restricted))
         _layerPipelines = [NSMutableDictionary dictionary];
         _layerPipelineCacheLock = MTILockCreate();
         
-        _passthroughRenderPipeline = [MTIMultilayerCompositeKernelState renderPipelineWithFragmentFunctionName:MTIFilterPassthroughFragmentFunctionName colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
+        _passthroughRenderPipeline = [MTIMultilayerBrushCompositeKernelState renderPipelineWithFragmentFunctionName:MTIFilterPassthroughFragmentFunctionName colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
         if (error) {
             if (inOutError) {
                 *inOutError = error;
@@ -233,7 +243,7 @@ __attribute__((objc_subclassing_restricted))
             return nil;
         }
         
-        _unpremultiplyAlphaRenderPipeline = [MTIMultilayerCompositeKernelState renderPipelineWithFragmentFunctionName:MTIFilterUnpremultiplyAlphaFragmentFunctionName colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
+        _unpremultiplyAlphaRenderPipeline = [MTIMultilayerBrushCompositeKernelState renderPipelineWithFragmentFunctionName:MTIFilterUnpremultiplyAlphaFragmentFunctionName colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
         if (error) {
             if (inOutError) {
                 *inOutError = error;
@@ -244,14 +254,14 @@ __attribute__((objc_subclassing_restricted))
         BOOL useProgrammableBlending = context.defaultLibrarySupportsProgrammableBlending && context.isProgrammableBlendingSupported;
         
         if (useProgrammableBlending) {
-            _premultiplyAlphaInPlaceRenderPipeline = [MTIMultilayerCompositeKernelState renderPipelineWithFragmentFunctionName:@"premultiplyAlphaInPlace" colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
+            _premultiplyAlphaInPlaceRenderPipeline = [MTIMultilayerBrushCompositeKernelState renderPipelineWithFragmentFunctionName:@"premultiplyAlphaInPlace" colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
             if (error) {
                 if (inOutError) {
                     *inOutError = error;
                 }
                 return nil;
             }
-            _alphaToOneInPlaceRenderPipeline = [MTIMultilayerCompositeKernelState renderPipelineWithFragmentFunctionName:@"alphaToOneInPlace" colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
+            _alphaToOneInPlaceRenderPipeline = [MTIMultilayerBrushCompositeKernelState renderPipelineWithFragmentFunctionName:@"alphaToOneInPlace" colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
             if (error) {
                 if (inOutError) {
                     *inOutError = error;
@@ -259,14 +269,14 @@ __attribute__((objc_subclassing_restricted))
                 return nil;
             }
         } else {
-            _premultiplyAlphaInPlaceRenderPipeline = [MTIMultilayerCompositeKernelState renderPipelineWithFragmentFunctionName:@"premultiplyAlpha" colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
+            _premultiplyAlphaInPlaceRenderPipeline = [MTIMultilayerBrushCompositeKernelState renderPipelineWithFragmentFunctionName:@"premultiplyAlpha" colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
             if (error) {
                 if (inOutError) {
                     *inOutError = error;
                 }
                 return nil;
             }
-            _alphaToOneInPlaceRenderPipeline = [MTIMultilayerCompositeKernelState renderPipelineWithFragmentFunctionName:@"alphaToOne" colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
+            _alphaToOneInPlaceRenderPipeline = [MTIMultilayerBrushCompositeKernelState renderPipelineWithFragmentFunctionName:@"alphaToOne" colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:rasterSampleCount context:context error:&error];
             if (error) {
                 if (inOutError) {
                     *inOutError = error;
@@ -278,8 +288,8 @@ __attribute__((objc_subclassing_restricted))
     return self;
 }
 
-- (MTIRenderPipeline *)renderPipelineForLayer:(MTILayer *)layer error:(NSError * __autoreleasing *)inOutError {
-    MTILayerRenderPipelineKey *key = [[MTILayerRenderPipelineKey alloc] initWithLayer:layer];
+- (MTIRenderPipeline *)renderPipelineForLayer:(MTIBrushLayer *)layer error:(NSError * __autoreleasing *)inOutError {
+    MTIBrushLayerRenderPipelineKey *key = [[MTIBrushLayerRenderPipelineKey alloc] initWithLayer:layer];
     [self.layerPipelineCacheLock lock];
     @MTI_DEFER {
         [self.layerPipelineCacheLock unlock];
@@ -343,13 +353,15 @@ __attribute__((objc_subclassing_restricted))
 @end
 
 __attribute__((objc_subclassing_restricted))
-@interface MTIMultilayerCompositingRecipe : NSObject <MTIImagePromise>
+@interface MTIMultilayerBrushCompositingRecipe : NSObject <MTIImagePromise>
 
 @property (nonatomic,copy,readonly) MTIImage *backgroundImage;
 
-@property (nonatomic,strong,readonly) MTIMultilayerCompositeKernel *kernel;
+@property (nonatomic,copy,readonly) MTIImage *backgroundImageBeforeCurrentSession;
 
-@property (nonatomic,copy,readonly) NSArray<MTILayer *> *layers;
+@property (nonatomic,strong,readonly) MTIMultilayerBrushCompositeKernel *kernel;
+
+@property (nonatomic,copy,readonly) NSArray<MTIBrushLayer *> *layers;
 
 @property (nonatomic,readonly) MTLPixelFormat outputPixelFormat;
 
@@ -357,12 +369,12 @@ __attribute__((objc_subclassing_restricted))
 
 @end
 
-@implementation MTIMultilayerCompositingRecipe
+@implementation MTIMultilayerBrushCompositingRecipe
 @synthesize dimensions = _dimensions;
 @synthesize dependencies = _dependencies;
 @synthesize alphaType = _alphaType;
 
-- (void)drawVerticesForRect:(CGRect)rect contentRegion:(CGRect)contentRegion flipOptions:(MTILayerFlipOptions)flipOptions commandEncoder:(id<MTLRenderCommandEncoder>)commandEncoder {
+- (void)drawVerticesForRect:(CGRect)rect contentRegion:(CGRect)contentRegion flipOptions:(MTIShapeFlipOptions)flipOptions commandEncoder:(id<MTLRenderCommandEncoder>)commandEncoder {
     CGFloat l = CGRectGetMinX(rect);
     CGFloat r = CGRectGetMaxX(rect);
     CGFloat t = CGRectGetMinY(rect);
@@ -373,18 +385,18 @@ __attribute__((objc_subclassing_restricted))
     CGFloat contentT = CGRectGetMaxY(contentRegion);
     CGFloat contentB = CGRectGetMinY(contentRegion);
     
-    if (flipOptions & MTILayerFlipOptionsFlipVertically) {
+    if (flipOptions & MTIShapeFlipOptionsFlipVertically) {
         CGFloat temp = contentT;
         contentT = contentB;
         contentB = temp;
     }
-    if (flipOptions & MTILayerFlipOptionsFlipHorizontally) {
+    if (flipOptions & MTIShapeFlipOptionsFlipHorizontally) {
         CGFloat temp = contentL;
         contentL = contentR;
         contentR = temp;
     }
     
-    MTIMultilayerCompositingLayerVertex vertices[4] = {
+    MTIMultilayerBrushCompositingLayerVertex vertices[4] = {
         { .position = {l, t, 0, 1} , .textureCoordinate = { contentL, contentT }, .positionInLayer = { 0, 1 } },
         { .position = {r, t, 0, 1} , .textureCoordinate = { contentR, contentT }, .positionInLayer = { 1, 1 } },
         { .position = {l, b, 0, 1} , .textureCoordinate = { contentL, contentB }, .positionInLayer = { 0, 0 } },
@@ -410,7 +422,7 @@ __attribute__((objc_subclassing_restricted))
     
     MTLPixelFormat pixelFormat = (_outputPixelFormat == MTIPixelFormatUnspecified) ? renderingContext.context.workingPixelFormat : _outputPixelFormat;
 
-    MTIMultilayerCompositeKernelState *kernelState = [renderingContext.context kernelStateForKernel:_kernel configuration:[[MTIMultilayerCompositeKernelConfiguration alloc] initWithOutputPixelFormat:pixelFormat rasterSampleCount:_rasterSampleCount] error:&error];
+    MTIMultilayerBrushCompositeKernelState *kernelState = [renderingContext.context kernelStateForKernel:_kernel configuration:[[MTIMultilayerBrushCompositeKernelConfiguration alloc] initWithOutputPixelFormat:pixelFormat rasterSampleCount:_rasterSampleCount] error:&error];
     if (error) {
         if (inOutError) {
             *inOutError = error;
@@ -483,11 +495,33 @@ __attribute__((objc_subclassing_restricted))
     
     //render layers
     CGSize backgroundImageSize = self.backgroundImage.size;
-    for (MTILayer *layer in self.layers) {
+//    if (self.layers.count >= 64) {
+//        NSLog(@"self.layers %d", self.layers.count);
+//    }
+//
+//    MTIMultilayerBrushCompositingLayerSessionVertexes sessionVertexes;
+//    for (int i = 0; i < self.layers.count && i < 64; i++) {
+//        MTIBrushLayer *layer = self.layers[i];
+//
+//        CGSize layerPixelSize = [layer sizeInPixelForBackgroundSize:backgroundImageSize];
+//        CGPoint layerPixelPosition = [layer positionInPixelForBackgroundSize:backgroundImageSize];
+//
+//        MTIMultilayerBrushCompositingLayerSessionVertex v;
+//        v.position = simd_make_float4(layerPixelPosition.x, layerPixelPosition.y, 1, 0);
+//        v.angle = 0;
+//        v.size = layerPixelSize.width;
+//
+//        sessionVertexes.vertexes[i] = v;
+//    }
+    
+    for (MTIBrushLayer *layer in self.layers) {
         NSParameterAssert(layer.content.alphaType != MTIAlphaTypeUnknown);
         
         CGSize layerPixelSize = [layer sizeInPixelForBackgroundSize:backgroundImageSize];
+        CGSize layerStartPixelSize = [layer startSizeInPixelForBackgroundSize:backgroundImageSize];
         CGPoint layerPixelPosition = [layer positionInPixelForBackgroundSize:backgroundImageSize];
+        CGPoint layerStartPixelPosition = [layer startPositionInPixelForBackgroundSize:backgroundImageSize];
+        CGPoint layerLastPixelPosition = [layer lastPositionInPixelForBackgroundSize:backgroundImageSize];
         
         MTIRenderPipeline *renderPipeline = [kernelState renderPipelineForLayer:layer error:&error];
         if (error) {
@@ -512,38 +546,109 @@ __attribute__((objc_subclassing_restricted))
         [commandEncoder setVertexBytes:&orthographicMatrix length:sizeof(orthographicMatrix) atIndex:2];
         
         [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.content] atIndex:0];
-        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.content] atIndex:0];
+//        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.content] atIndex:0];
+        
+//        [commandEncoder setFragmentBytes:&sessionVertexes length:sizeof(sessionVertexes) atIndex:1];
+//        [commandEncoder setFragmentBytes:&transformMatrix length:sizeof(transformMatrix) atIndex:2];
+//        [commandEncoder setFragmentBytes:&orthographicMatrix length:sizeof(orthographicMatrix) atIndex:3];
         
         if (layer.compositingMask) {
             NSParameterAssert(layer.compositingMask.content.alphaType != MTIAlphaTypeUnknown);
             [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.compositingMask.content] atIndex:1];
-            [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.compositingMask.content] atIndex:1];
+//            [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.compositingMask.content] atIndex:1];
         }
         
         if (layer.mask) {
             NSParameterAssert(layer.mask.content.alphaType != MTIAlphaTypeUnknown);
             [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.mask.content] atIndex:2];
-            [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.mask.content] atIndex:2];
+//            [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.mask.content] atIndex:2];
         }
         
+        if (layer.materialMask) {
+            NSParameterAssert(layer.materialMask.content.alphaType != MTIAlphaTypeUnknown);
+            [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.materialMask.content] atIndex:3];
+//            [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.materialMask.content] atIndex:3];
+        }
+        
+        if (layer.clippingMask) {
+            NSParameterAssert(layer.clippingMask.content.alphaType != MTIAlphaTypeUnknown);
+            [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.clippingMask.content] atIndex:4];
+        }
+        
+        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImage] atIndex:5];
+//        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImage] atIndex:3];
+        
+        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImageBeforeCurrentSession] atIndex:6];
+//        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
+        
+        NSArray *allCases = MTIBlendModes.allCases;
+        
         //parameters
-        MTIMultilayerCompositingLayerShadingParameters parameters;
+        MTIMultilayerBrushCompositingLayerShadingParameters parameters;
         parameters.canvasSize = simd_make_float2(backgroundImageSize.width, backgroundImageSize.height);
         parameters.opacity = layer.opacity;
+        parameters.tintColor = MTIColorToFloat4(layer.tintColor);
+        parameters.layerSize = simd_make_float2(layerPixelSize.width, layerPixelSize.height);
+        parameters.startPosition = simd_make_float2(layerStartPixelPosition.x, layerStartPixelPosition.y);
+        parameters.lastPosition = simd_make_float2(layerLastPixelPosition.x, layerLastPixelPosition.y);
+        parameters.startLayerSize = simd_make_float2(layerStartPixelSize.width, layerStartPixelSize.height);
+        parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
+        parameters.fillMode = (int)layer.fillMode;
+        parameters.isAlphaLocked = (BOOL)layer.isAlphaLocked;
+        parameters.renderingMode = (int)layer.renderingMode;
+        parameters.renderingBlendMode = (int)[allCases indexOfObject:layer.renderingBlendMode];
+        
         parameters.compositingMaskComponent = (int)layer.compositingMask.component;
         parameters.compositingMaskUsesOneMinusValue = layer.compositingMask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.compositingMaskHasPremultipliedAlpha = layer.compositingMask.content.alphaType == MTIAlphaTypePremultiplied;
+        parameters.compositingMaskType = (int)layer.compositingMask.type;
+        parameters.compositingMaskMovement = layer.compositingMask.movement;
+        parameters.compositingMaskScale = layer.compositingMask.scale;        
+        parameters.compositingMaskZoom = layer.compositingMask.zoom;
+        parameters.compositingMaskRotation = layer.compositingMask.rotation;
+        parameters.compositingMaskDepth = layer.compositingMask.depth;
+        parameters.compositingMaskBlendMode = (int)[allCases indexOfObject:layer.compositingMask.blendMode];
+        parameters.compositingMaskOffsetJitter = simd_make_float2(layer.compositingMask.offsetJitter.x, layer.compositingMask.offsetJitter.y);
+        
+        parameters.materialMaskComponent = (int)layer.materialMask.component;
+        parameters.materialMaskUsesOneMinusValue = layer.materialMask.mode == MTIMaskModeOneMinusMaskValue;
+        parameters.materialMaskHasPremultipliedAlpha = layer.materialMask.content.alphaType == MTIAlphaTypePremultiplied;
+        parameters.materialMaskType = (int)layer.materialMask.type;
+        parameters.materialMaskMovement = layer.materialMask.movement;
+        parameters.materialMaskScale = layer.materialMask.scale;
+        parameters.materialMaskZoom = layer.materialMask.zoom;
+        parameters.materialMaskRotation = layer.materialMask.rotation;
+        parameters.materialMaskDepth = layer.materialMask.depth;
+        parameters.materialMaskBlendMode = (int)[allCases indexOfObject:layer.materialMask.blendMode];
+        parameters.materialMaskOffsetJitter = simd_make_float2(layer.materialMask.offsetJitter.x, layer.materialMask.offsetJitter.y);
+        parameters.materialMaskDepth1 = layer.materialMask.depth1;
+        parameters.materialMaskDepth1Inverted = layer.materialMask.depth1Inverted;
+        parameters.materialMaskBlendMode1 = (int)[allCases indexOfObject:layer.materialMask.blendMode1];
+        parameters.materialMaskDepth2 = layer.materialMask.depth2;
+        parameters.materialMaskDepth2Inverted = layer.materialMask.depth2Inverted;
+        parameters.materialMaskBlendMode2 = (int)[allCases indexOfObject:layer.materialMask.blendMode2];
+        
+        parameters.clippingMaskComponent = (int)layer.clippingMask.component;
+        
+        double val = ((double)arc4random() / UINT32_MAX);
+        CGFloat percent = MIN(1-layer.shape.countJitter*val, 0.99);
+        parameters.shapeCount = (int)(layer.shape.count * percent + 1);
+        
+        parameters.shapeComponent = (int)layer.shape.component;
+        parameters.shapeUsesOneMinusValue = layer.shape.mode == MTIMaskModeOneMinusMaskValue;
+        parameters.shapeRotation = layer.shape.rotation;
+        parameters.shapeFlipX = layer.shape.flipOptions & MTIShapeFlipOptionsFlipHorizontally;
+        parameters.shapeFlipY = layer.shape.flipOptions & MTIShapeFlipOptionsFlipVertically;
+        
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.maskHasPremultipliedAlpha = layer.mask.content.alphaType == MTIAlphaTypePremultiplied;
-        parameters.tintColor = MTIColorToFloat4(layer.tintColor);
-        parameters.layerSize = simd_make_float2(layerPixelSize.width, layerPixelSize.height);
-        parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
+        
         [commandEncoder setFragmentBytes:&parameters length:sizeof(parameters) atIndex:0];
         
         [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
                     contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width, layer.contentRegion.origin.y/layer.content.size.height, layer.contentRegion.size.width/layer.content.size.width, layer.contentRegion.size.height/layer.content.size.height)
-                      flipOptions:layer.contentFlipOptions
+                      flipOptions:MTIShapeFlipOptionsDonotFlip
                    commandEncoder:commandEncoder];
     }
     
@@ -579,7 +684,7 @@ __attribute__((objc_subclassing_restricted))
     
     MTLPixelFormat pixelFormat = (self.outputPixelFormat == MTIPixelFormatUnspecified) ? renderingContext.context.workingPixelFormat : self.outputPixelFormat;
     
-    MTIMultilayerCompositeKernelState *kernelState = [renderingContext.context kernelStateForKernel:self.kernel configuration:[[MTIMultilayerCompositeKernelConfiguration alloc] initWithOutputPixelFormat:pixelFormat rasterSampleCount:_rasterSampleCount] error:&error];
+    MTIMultilayerBrushCompositeKernelState *kernelState = [renderingContext.context kernelStateForKernel:self.kernel configuration:[[MTIMultilayerBrushCompositeKernelConfiguration alloc] initWithOutputPixelFormat:pixelFormat rasterSampleCount:_rasterSampleCount] error:&error];
     if (error) {
         if (inOutError) {
             *inOutError = error;
@@ -668,7 +773,7 @@ __attribute__((objc_subclassing_restricted))
     
     //render layers
     CGSize backgroundImageSize = self.backgroundImage.size;
-    for (MTILayer *layer in self.layers) {
+    for (MTIBrushLayer *layer in self.layers) {
         prepareCommandEncoderForNextDraw();
         if (!commandEncoder) {
             if (inOutError) {
@@ -721,7 +826,7 @@ __attribute__((objc_subclassing_restricted))
         [commandEncoder setFragmentTexture:renderTarget.texture atIndex:1];
         
         //parameters
-        MTIMultilayerCompositingLayerShadingParameters parameters;
+        MTIMultilayerBrushCompositingLayerShadingParameters parameters;
         parameters.canvasSize = simd_make_float2(backgroundImageSize.width, backgroundImageSize.height);
         parameters.opacity = layer.opacity;
         parameters.compositingMaskComponent = (int)layer.compositingMask.component;
@@ -733,11 +838,13 @@ __attribute__((objc_subclassing_restricted))
         parameters.tintColor = MTIColorToFloat4(layer.tintColor);
         parameters.layerSize = simd_make_float2(layerPixelSize.width, layerPixelSize.height);
         parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
+        parameters.fillMode = (int)layer.fillMode;
+        parameters.isAlphaLocked = (BOOL)layer.isAlphaLocked;
         [commandEncoder setFragmentBytes:&parameters length:sizeof(parameters) atIndex:0];
         
         [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
                     contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width, layer.contentRegion.origin.y/layer.content.size.height, layer.contentRegion.size.width/layer.content.size.width, layer.contentRegion.size.height/layer.content.size.height)
-                      flipOptions:layer.contentFlipOptions
+                      flipOptions:layer.shape.flipOptions
                    commandEncoder:commandEncoder];
     }
     
@@ -781,9 +888,10 @@ __attribute__((objc_subclassing_restricted))
     return self;
 }
 
-- (instancetype)initWithKernel:(MTIMultilayerCompositeKernel *)kernel
+- (instancetype)initWithKernel:(MTIMultilayerBrushCompositeKernel *)kernel
                backgroundImage:(MTIImage *)backgroundImage
-                        layers:(NSArray<MTILayer *> *)layers
+backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSession
+                        layers:(NSArray<MTIBrushLayer *> *)layers
              rasterSampleCount:(NSUInteger)rasterSampleCount
                outputAlphaType:(MTIAlphaType)outputAlphaType
        outputTextureDimensions:(MTITextureDimensions)outputTextureDimensions
@@ -791,24 +899,33 @@ __attribute__((objc_subclassing_restricted))
     if (self = [super init]) {
         NSParameterAssert(rasterSampleCount >= 1);
         NSParameterAssert(backgroundImage);
+        NSParameterAssert(backgroundImageBeforeCurrentSession);
         NSParameterAssert(kernel);
         NSParameterAssert(outputAlphaType != MTIAlphaTypeUnknown);
         _backgroundImage = backgroundImage;
+        _backgroundImageBeforeCurrentSession = backgroundImageBeforeCurrentSession;
         _alphaType = outputAlphaType;
         _kernel = kernel;
         _layers = layers;
         _dimensions = outputTextureDimensions;
         _outputPixelFormat = outputPixelFormat;
         _rasterSampleCount = rasterSampleCount;
-        NSMutableArray *dependencies = [NSMutableArray arrayWithCapacity:layers.count + 1];
+        NSMutableArray *dependencies = [NSMutableArray arrayWithCapacity:layers.count + 1 + 1];
         [dependencies addObject:backgroundImage];
-        for (MTILayer *layer in layers) {
+        [dependencies addObject:backgroundImageBeforeCurrentSession];
+        for (MTIBrushLayer *layer in layers) {
             [dependencies addObject:layer.content];
             if (layer.compositingMask) {
                 [dependencies addObject:layer.compositingMask.content];
             }
             if (layer.mask) {
                 [dependencies addObject:layer.mask.content];
+            }
+            if (layer.materialMask) {
+                [dependencies addObject:layer.materialMask.content];
+            }
+            if (layer.clippingMask) {
+                [dependencies addObject:layer.clippingMask.content];
             }
         }
         _dependencies = [dependencies copy];
@@ -821,28 +938,81 @@ __attribute__((objc_subclassing_restricted))
     NSInteger pointer = 0;
     MTIImage *backgroundImage = dependencies[pointer];
     pointer += 1;
+    MTIImage *backgroundImageBeforeCurrentSession = dependencies[pointer];
+    pointer += 1;
     NSMutableArray *newLayers = [NSMutableArray arrayWithCapacity:self.layers.count];
-    for (MTILayer *layer in self.layers) {
+    for (MTIBrushLayer *layer in self.layers) {
         MTIImage *newContent = dependencies[pointer];
         pointer += 1;
         MTIMask *compositingMask = layer.compositingMask;
         MTIMask *newCompositingMask = nil;
         MTIMask *mask = layer.mask;
         MTIMask *newMask = nil;
+        MTIMaterialMask *materialMask = layer.materialMask;
+        MTIMaterialMask *newMaterialMask = nil;
+        MTIMask *clippingMask = layer.clippingMask;
+        MTIMask *newClippingMask = nil;
+        
         if (compositingMask) {
             MTIImage *newCompositingMaskContent = dependencies[pointer];
             pointer += 1;
-            newCompositingMask = [[MTIMask alloc] initWithContent:newCompositingMaskContent component:compositingMask.component mode:compositingMask.mode];
+            newCompositingMask = [[MTIMask alloc] initWithContent:newCompositingMaskContent
+                                                        component:compositingMask.component
+                                                             mode:compositingMask.mode
+                                                             type:compositingMask.type
+                                                         movement:compositingMask.movement
+                                                            scale:compositingMask.scale
+                                                             zoom:compositingMask.zoom
+                                                         rotation:compositingMask.rotation
+                                                            depth:compositingMask.depth
+                                                     offsetJitter:compositingMask.offsetJitter
+                                                        blendMode:compositingMask.blendMode];
         }
         if (mask) {
             MTIImage *newMaskContent = dependencies[pointer];
             pointer += 1;
-            newMask = [[MTIMask alloc] initWithContent:newMaskContent component:mask.component mode:mask.mode];
+            newMask = [[MTIMask alloc] initWithContent:newMaskContent
+                                             component:mask.component
+                                                  mode:mask.mode
+                                                  type:mask.type
+                                              movement:mask.movement
+                                                 scale:mask.scale
+                                                  zoom:mask.zoom
+                                              rotation:mask.rotation
+                                                 depth:mask.depth
+                                          offsetJitter:mask.offsetJitter
+                                             blendMode:mask.blendMode];
         }
-        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode];
+        if (materialMask) {
+            MTIImage *newMaterialMaskContent = dependencies[pointer];
+            pointer += 1;
+            newMaterialMask = [[MTIMaterialMask alloc] initWithContent:newMaterialMaskContent
+                                                             component:materialMask.component
+                                                                  mode:materialMask.mode
+                                                                  type:materialMask.type
+                                                              movement:materialMask.movement
+                                                                 scale:materialMask.scale
+                                                                  zoom:materialMask.zoom
+                                                              rotation:materialMask.rotation
+                                                                 depth:materialMask.depth
+                                                          offsetJitter:materialMask.offsetJitter
+                                                             blendMode:materialMask.blendMode
+                                                                depth1:materialMask.depth1
+                                                        depth1Inverted:materialMask.depth1Inverted
+                                                            blendMode1:materialMask.blendMode1
+                                                                depth2:materialMask.depth2
+                                                        depth2Inverted:materialMask.depth2Inverted
+                                                            blendMode2:materialMask.blendMode2];
+        }
+        if (clippingMask) {
+            MTIImage *newClippingMaskContent = dependencies[pointer];
+            pointer += 1;
+            newClippingMask = [[MTIMask alloc] initWithContent:newClippingMaskContent];
+        }
+        MTIBrushLayer *newLayer = [[MTIBrushLayer alloc] initWithContent:newContent contentRegion:layer.contentRegion mask:newMask compositingMask:newCompositingMask materialMask:newMaterialMask clippingMask:newClippingMask layoutUnit:layer.layoutUnit position:layer.position startPosition:layer.startPosition lastPosition:layer.lastPosition size:layer.size startSize:layer.startSize rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode renderingMode:layer.renderingMode renderingBlendMode:layer.renderingBlendMode fillMode:layer.fillMode shape:layer.shape isAlphaLocked:layer.isAlphaLocked];
         [newLayers addObject:newLayer];
     }
-    return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage layers:newLayers rasterSampleCount:_rasterSampleCount outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
+    return [[MTIMultilayerBrushCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage backgroundImageBeforeCurrentSession:backgroundImageBeforeCurrentSession layers:newLayers rasterSampleCount:_rasterSampleCount outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
 }
 
 - (MTIImagePromiseDebugInfo *)debugInfo {
@@ -851,24 +1021,42 @@ __attribute__((objc_subclassing_restricted))
 
 @end
 
-@implementation MTIMultilayerCompositeKernel
+@implementation MTIMultilayerBrushCompositeKernel
 
-- (id)newKernelStateWithContext:(MTIContext *)context configuration:(MTIMultilayerCompositeKernelConfiguration *)configuration error:(NSError * __autoreleasing *)error {
++ (MTIBlendFunctionDescriptors *)blendFunctionDescriptors {
+    static MTIBlendFunctionDescriptors *descriptors;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        NSString *mode = @"Normal";
+        NSString *fragmentFunctionNameForBlendFilter = [[mode stringByReplacingCharactersInRange:NSMakeRange(0, 1) withString:[mode substringWithRange:NSMakeRange(0, 1)].lowercaseString] stringByAppendingString:@"Blend"];
+        NSString *fragmentFunctionNameForMultilayerCompositingFilterWithoutPB = [NSString stringWithFormat:@"multilayerComposite%@Blend",mode];
+        NSString *fragmentFunctionNameForMultilayerCompositingFilterWithPB = [NSString stringWithFormat:@"multilayerBrushComposite%@Blend_programmableBlending",mode];
+        descriptors = [[MTIBlendFunctionDescriptors alloc]
+                       initWithFragmentFunctionDescriptorForBlendFilter:[[MTIFunctionDescriptor alloc] initWithName:fragmentFunctionNameForBlendFilter]
+                       fragmentFunctionDescriptorForMultilayerCompositingFilterWithProgrammableBlending:[[MTIFunctionDescriptor alloc] initWithName:fragmentFunctionNameForMultilayerCompositingFilterWithPB]
+                       fragmentFunctionDescriptorForMultilayerCompositingFilterWithoutProgrammableBlending:[[MTIFunctionDescriptor alloc] initWithName:fragmentFunctionNameForMultilayerCompositingFilterWithoutPB]];
+    });
+    return descriptors;
+}
+
+- (id)newKernelStateWithContext:(MTIContext *)context configuration:(MTIMultilayerBrushCompositeKernelConfiguration *)configuration error:(NSError * __autoreleasing *)error {
     NSParameterAssert(configuration);
     MTLRenderPipelineColorAttachmentDescriptor *colorAttachmentDescriptor = [[MTLRenderPipelineColorAttachmentDescriptor alloc] init];
     colorAttachmentDescriptor.pixelFormat = configuration.outputPixelFormat;
     colorAttachmentDescriptor.blendingEnabled = NO;
-    return [[MTIMultilayerCompositeKernelState alloc] initWithContext:context colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:configuration.rasterSampleCount error:error];
+    return [[MTIMultilayerBrushCompositeKernelState alloc] initWithContext:context colorAttachmentDescriptor:colorAttachmentDescriptor rasterSampleCount:configuration.rasterSampleCount error:error];
 }
 
 - (MTIImage *)applyToBackgroundImage:(MTIImage *)image
-                              layers:(NSArray<MTILayer *> *)layers
+ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSession
+                              layers:(NSArray<MTIBrushLayer *> *)layers
                    rasterSampleCount:(NSUInteger)rasterSampleCount
                      outputAlphaType:(MTIAlphaType)outputAlphaType
              outputTextureDimensions:(MTITextureDimensions)outputTextureDimensions
                    outputPixelFormat:(MTLPixelFormat)outputPixelFormat {
-    MTIMultilayerCompositingRecipe *receipt = [[MTIMultilayerCompositingRecipe alloc] initWithKernel:self
+    MTIMultilayerBrushCompositingRecipe *receipt = [[MTIMultilayerBrushCompositingRecipe alloc] initWithKernel:self
                                                                                      backgroundImage:image
+                                                                 backgroundImageBeforeCurrentSession:backgroundImageBeforeCurrentSession
                                                                                               layers:layers
                                                                                    rasterSampleCount:rasterSampleCount
                                                                                      outputAlphaType:outputAlphaType
@@ -881,18 +1069,19 @@ __attribute__((objc_subclassing_restricted))
 
 #import "MTIRenderGraphOptimization.h"
 
-void MTIMultilayerCompositingRenderGraphNodeOptimize(MTIRenderGraphNode *node) {
-    if ([node.image.promise isKindOfClass:[MTIMultilayerCompositingRecipe class]]) {
-        MTIMultilayerCompositingRecipe *recipe = node.image.promise;
+void MTIMultilayerBrushCompositingRenderGraphNodeOptimize(MTIRenderGraphNode *node) {
+    if ([node.image.promise isKindOfClass:[MTIMultilayerBrushCompositingRecipe class]]) {
+        MTIMultilayerBrushCompositingRecipe *recipe = node.image.promise;
         MTIRenderGraphNode *lastNode = node.inputs.firstObject;
         MTIImage *lastImage = node.inputs.firstObject.image;
-        if (lastNode.uniqueDependentCount == 1 && [lastImage.promise isKindOfClass:[MTIMultilayerCompositingRecipe class]]) {
-            MTIMultilayerCompositingRecipe *lastPromise = lastImage.promise;
-            NSArray<MTILayer *> *layers = recipe.layers;
+        if (lastNode.uniqueDependentCount == 1 && [lastImage.promise isKindOfClass:[MTIMultilayerBrushCompositingRecipe class]]) {
+            MTIMultilayerBrushCompositingRecipe *lastPromise = lastImage.promise;
+            NSArray<MTIBrushLayer *> *layers = recipe.layers;
             if (lastImage.cachePolicy == MTIImageCachePolicyTransient && lastPromise.outputPixelFormat == recipe.outputPixelFormat && recipe.kernel == lastPromise.kernel) {
                 layers = [lastPromise.layers arrayByAddingObjectsFromArray:layers];
-                MTIMultilayerCompositingRecipe *promise = [[MTIMultilayerCompositingRecipe alloc] initWithKernel:recipe.kernel
+                MTIMultilayerBrushCompositingRecipe *promise = [[MTIMultilayerBrushCompositingRecipe alloc] initWithKernel:recipe.kernel
                                                                                                  backgroundImage:lastPromise.backgroundImage
+                                                                             backgroundImageBeforeCurrentSession:lastPromise.backgroundImageBeforeCurrentSession
                                                                                                           layers:layers
                                                                                                rasterSampleCount:MAX(recipe.rasterSampleCount,lastPromise.rasterSampleCount)
                                                                                                  outputAlphaType:recipe.alphaType

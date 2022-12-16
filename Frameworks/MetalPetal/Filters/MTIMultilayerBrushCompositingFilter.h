@@ -1,5 +1,5 @@
 //
-//  MTIMultilayerCompositingFilter.h
+//  MTIMultilayerBrushCompositingFilter.h
 //  Pods
 //
 //  Created by YuAo on 27/09/2017.
@@ -13,17 +13,19 @@
 #import "MTIAlphaType.h"
 #endif
 
-@class MTILayer;
+@class MTIBrushLayer;
 
 NS_ASSUME_NONNULL_BEGIN
 
 /// A filter that allows you to compose multiple `MTILayer` objects onto a background image. A `MTIMultilayerCompositingFilter` object skips the actual rendering when its `layers.count` is zero.
 __attribute__((objc_subclassing_restricted))
-@interface MTIMultilayerCompositingFilter : NSObject <MTIFilter>
+@interface MTIMultilayerBrushCompositingFilter : NSObject <MTIFilter>
 
 @property (nonatomic, strong, nullable) MTIImage *inputBackgroundImage;
 
-@property (nonatomic, copy) NSArray<MTILayer *> *layers;
+@property (nonatomic, strong, nullable) MTIImage *inputBackgroundImageBeforeCurrentSession;
+
+@property (nonatomic, copy) NSArray<MTIBrushLayer *> *layers;
 
 @property (nonatomic) NSUInteger rasterSampleCount;
 
