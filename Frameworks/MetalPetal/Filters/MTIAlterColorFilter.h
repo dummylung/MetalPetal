@@ -1,5 +1,5 @@
 //
-//  MTIPixellateFilter.h
+//  MTIAlterColorFilter.h
 //  Pods
 //
 //  Created by Yu Ao on 08/01/2018.
@@ -14,7 +14,7 @@
 #endif
 
 __attribute__((objc_subclassing_restricted))
-@interface MTIBlackToTransparentFilter : MTIUnaryImageRenderingFilter
+@interface MTIAlterColorFilter : MTIUnaryImageRenderingFilter
 
 /// Specifies the scale of the operation, i.e. the size for the pixels in the resulting image.
 @property (nonatomic) MTIColor color;

@@ -1,16 +1,16 @@
 //
-//  MTIPixellateFilter.m
+//  MTIAlterColorFilter.m
 //  Pods
 //
 //  Created by Yu Ao on 08/01/2018.
 //
 
-#import "MTIBlackToTransparentFilter.h"
+#import "MTIAlterColorFilter.h"
 #import "MTIFunctionDescriptor.h"
 #import "MTIVector.h"
 #import "MTIVector+SIMD.h"
 
-@implementation MTIBlackToTransparentFilter
+@implementation MTIAlterColorFilter
 
 - (instancetype)init {
     if (self = [super init]) {
@@ -20,11 +20,13 @@
 }
 
 + (MTIFunctionDescriptor *)fragmentFunctionDescriptor {
-    return [[MTIFunctionDescriptor alloc] initWithName:@"blackToTransparent"];
+    return [[MTIFunctionDescriptor alloc] initWithName:@"alterColor"];
 }
 
 - (NSDictionary<NSString *,id> *)parameters {
-    return @{@"color": [MTIVector vectorWithFloat4:MTIColorToFloat4(self.color)]};
+    return @{
+        @"color": [MTIVector vectorWithFloat4:MTIColorToFloat4(self.color)]
+    };
 }
 
 + (MTIAlphaTypeHandlingRule *)alphaTypeHandlingRule {

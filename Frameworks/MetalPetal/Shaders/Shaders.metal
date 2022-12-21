@@ -419,14 +419,13 @@ namespace metalpetal {
         return sourceTexture.sample(sourceSampler, samplePos/textureSize);
     }
     
-    fragment float4 blackToTransparent(VertexOut vertexIn [[stage_in]],
+    fragment float4 alterColor(VertexOut vertexIn [[stage_in]],
                                        texture2d<float, access::sample> sourceTexture [[texture(0)]],
                                        sampler sourceSampler [[sampler(0)]],
                                        constant float4 &color [[buffer(0)]]
                                        ) {
         float4 textureColor = sourceTexture.sample(sourceSampler, vertexIn.textureCoordinate);
-        float alpha = textureColor.r;
-        return float4(color.r*alpha, color.g*alpha, color.b*alpha, 0);
+        return float4(color.r*textureColor.r, color.g*textureColor.g, color.b*textureColor.b, textureColor.r);
     }
     
 //    class QItem {
