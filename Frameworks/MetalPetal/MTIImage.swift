@@ -132,7 +132,7 @@ extension MTIImage {
         @unknown default:
             fatalError()
         }
-        assert(size.width >= 1 && size.height >= 1)
+//        assert(size.width >= 1 && size.height >= 1)
         guard size.width >= 1 && size.height >= 1 else { return nil }
         return MTIUnaryImageRenderingFilter.image(byProcessingImage: self, orientation: .up, parameters: [:], outputPixelFormat: outputPixelFormat, outputImageSize: size)
     }
