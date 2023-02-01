@@ -31,7 +31,7 @@
 }
 
 + (MTIAlphaTypeHandlingRule *)alphaTypeHandlingRule {
-    return MTIAlphaTypeHandlingRule.generalAlphaTypeHandlingRule;
+    return MTIAlphaTypeHandlingRule.passthroughAlphaTypeHandlingRule;
 }
 
 @end
