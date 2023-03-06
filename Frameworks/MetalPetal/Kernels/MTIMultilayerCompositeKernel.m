@@ -355,6 +355,8 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic,readonly) NSUInteger rasterSampleCount;
 
+@property (nonatomic, readonly) CGRect scissorRect;
+
 @end
 
 @implementation MTIMultilayerCompositingRecipe
@@ -481,10 +483,20 @@ __attribute__((objc_subclassing_restricted))
     
     [MTIVertices.fullViewportSquareVertices encodeDrawCallWithCommandEncoder:commandEncoder context:renderPipeline];
     
+    if (!CGRectIsNull(_scissorRect) && !CGRectIsEmpty(_scissorRect)) {
+        [commandEncoder setScissorRect:(MTLScissorRect){
+            _scissorRect.origin.x, _scissorRect.origin.y, _scissorRect.size.width, _scissorRect.size.height
+        }];
+    }
+    
     //render layers
     CGSize backgroundImageSize = self.backgroundImage.size;
     for (MTILayer *layer in self.layers) {
         NSParameterAssert(layer.content.alphaType != MTIAlphaTypeUnknown);
+        
+        if ([layer isHidden]) {
+            continue;
+        }
         
         CGSize layerPixelSize = [layer sizeInPixelForBackgroundSize:backgroundImageSize];
         CGPoint layerPixelPosition = [layer positionInPixelForBackgroundSize:backgroundImageSize];
@@ -502,8 +514,15 @@ __attribute__((objc_subclassing_restricted))
         
         //transformMatrix
         CATransform3D transform = CATransform3DIdentity;
-        transform = CATransform3DTranslate(transform, layerPixelPosition.x - backgroundImageSize.width/2.0, -(layerPixelPosition.y - backgroundImageSize.height/2.0), 0);
+        
+//        transform = CATransform3DTranslate(transform, layerPixelPosition.x - backgroundImageSize.width/2.0, -(layerPixelPosition.y - backgroundImageSize.height/2.0), 0);
+        
+        transform = CATransform3DTranslate(transform, -backgroundImageSize.width/2.0, backgroundImageSize.height/2.0, 0);
+        transform = CATransform3DTranslate(transform, layerPixelPosition.x, -layerPixelPosition.y, 0);
+//        transform = CATransform3DTranslate(transform, -layerPixelSize.width*0.5, layerPixelSize.height*0.5, 0);
         transform = CATransform3DRotate(transform, -layer.rotation, 0, 0, 1);
+//        transform = CATransform3DTranslate(transform, layerPixelSize.width*0.5, -layerPixelSize.height*0.5, 0);
+        
         simd_float4x4 transformMatrix = MTIMakeTransformMatrixFromCATransform3D(transform);
         [commandEncoder setVertexBytes:&transformMatrix length:sizeof(transformMatrix) atIndex:1];
         
@@ -533,6 +552,10 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskComponent = (int)layer.compositingMask.component;
         parameters.compositingMaskUsesOneMinusValue = layer.compositingMask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.compositingMaskHasPremultipliedAlpha = layer.compositingMask.content.alphaType == MTIAlphaTypePremultiplied;
+        parameters.compositingMaskRotation = layer.compositingMask.rotation;
+        parameters.compositingMaskPosition = simd_make_float2(layer.compositingMask.position.x, layer.compositingMask.position.y);
+        parameters.compositingMaskSize = simd_make_float2(layer.compositingMask.size.width, layer.compositingMask.size.height);
+//        NSLog(@"%f %f %f %f %f", parameters.compositingMaskPosition.x, parameters.compositingMaskPosition.y, parameters.compositingMaskSize.x, parameters.compositingMaskSize.y, parameters.compositingMaskRotation);
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.maskHasPremultipliedAlpha = layer.mask.content.alphaType == MTIAlphaTypePremultiplied;
@@ -542,7 +565,10 @@ __attribute__((objc_subclassing_restricted))
         [commandEncoder setFragmentBytes:&parameters length:sizeof(parameters) atIndex:0];
         
         [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
-                    contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width, layer.contentRegion.origin.y/layer.content.size.height, layer.contentRegion.size.width/layer.content.size.width, layer.contentRegion.size.height/layer.content.size.height)
+                    contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width,
+                                             layer.contentRegion.origin.y/layer.content.size.height,
+                                             layer.contentRegion.size.width/layer.content.size.width,
+                                             layer.contentRegion.size.height/layer.content.size.height)
                       flipOptions:layer.contentFlipOptions
                    commandEncoder:commandEncoder];
     }
@@ -727,6 +753,9 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskComponent = (int)layer.compositingMask.component;
         parameters.compositingMaskUsesOneMinusValue = layer.compositingMask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.compositingMaskHasPremultipliedAlpha = layer.compositingMask.content.alphaType == MTIAlphaTypePremultiplied;
+        parameters.compositingMaskRotation = layer.compositingMask.rotation;
+        parameters.compositingMaskPosition = simd_make_float2(layer.compositingMask.position.x, layer.compositingMask.position.y);
+        parameters.compositingMaskSize = simd_make_float2(layer.compositingMask.size.width, layer.compositingMask.size.height);
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.maskHasPremultipliedAlpha = layer.mask.content.alphaType == MTIAlphaTypePremultiplied;
@@ -785,6 +814,7 @@ __attribute__((objc_subclassing_restricted))
                backgroundImage:(MTIImage *)backgroundImage
                         layers:(NSArray<MTILayer *> *)layers
              rasterSampleCount:(NSUInteger)rasterSampleCount
+                   scissorRect:(CGRect)scissorRect
                outputAlphaType:(MTIAlphaType)outputAlphaType
        outputTextureDimensions:(MTITextureDimensions)outputTextureDimensions
              outputPixelFormat:(MTLPixelFormat)outputPixelFormat {
@@ -797,6 +827,7 @@ __attribute__((objc_subclassing_restricted))
         _alphaType = outputAlphaType;
         _kernel = kernel;
         _layers = layers;
+        _scissorRect = scissorRect;
         _dimensions = outputTextureDimensions;
         _outputPixelFormat = outputPixelFormat;
         _rasterSampleCount = rasterSampleCount;
@@ -839,10 +870,10 @@ __attribute__((objc_subclassing_restricted))
             pointer += 1;
             newMask = [[MTIMask alloc] initWithContent:newMaskContent component:mask.component mode:mask.mode];
         }
-        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode];
+        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode isHidden:layer.isHidden scissorRect:layer.scissorRect];
         [newLayers addObject:newLayer];
     }
-    return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage layers:newLayers rasterSampleCount:_rasterSampleCount outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
+    return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage layers:newLayers rasterSampleCount:_rasterSampleCount scissorRect:_scissorRect outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
 }
 
 - (MTIImagePromiseDebugInfo *)debugInfo {
@@ -864,6 +895,7 @@ __attribute__((objc_subclassing_restricted))
 - (MTIImage *)applyToBackgroundImage:(MTIImage *)image
                               layers:(NSArray<MTILayer *> *)layers
                    rasterSampleCount:(NSUInteger)rasterSampleCount
+                         scissorRect:(CGRect)scissorRect
                      outputAlphaType:(MTIAlphaType)outputAlphaType
              outputTextureDimensions:(MTITextureDimensions)outputTextureDimensions
                    outputPixelFormat:(MTLPixelFormat)outputPixelFormat {
@@ -871,6 +903,7 @@ __attribute__((objc_subclassing_restricted))
                                                                                      backgroundImage:image
                                                                                               layers:layers
                                                                                    rasterSampleCount:rasterSampleCount
+                                                                                         scissorRect:scissorRect
                                                                                      outputAlphaType:outputAlphaType
                                                                              outputTextureDimensions:outputTextureDimensions
                                                                                    outputPixelFormat:outputPixelFormat];
@@ -895,6 +928,7 @@ void MTIMultilayerCompositingRenderGraphNodeOptimize(MTIRenderGraphNode *node) {
                                                                                                  backgroundImage:lastPromise.backgroundImage
                                                                                                           layers:layers
                                                                                                rasterSampleCount:MAX(recipe.rasterSampleCount,lastPromise.rasterSampleCount)
+                                                                                                     scissorRect:recipe.scissorRect
                                                                                                  outputAlphaType:recipe.alphaType
                                                                                          outputTextureDimensions:MTITextureDimensionsMake2DFromCGSize(lastPromise.backgroundImage.size)
                                                                                                outputPixelFormat:recipe.outputPixelFormat];

@@ -66,10 +66,10 @@
 }
 
 - (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode {
-    return [self initWithContent:content contentRegion:contentRegion contentFlipOptions:contentFlipOptions mask:mask compositingMask:compositingMask layoutUnit:layoutUnit position:position size:size rotation:rotation opacity:opacity cornerRadius:MTICornerRadiusMake(0) cornerCurve:MTICornerCurveCircular tintColor:tintColor blendMode:blendMode];
+    return [self initWithContent:content contentRegion:contentRegion contentFlipOptions:contentFlipOptions mask:mask compositingMask:compositingMask layoutUnit:layoutUnit position:position size:size rotation:rotation opacity:opacity cornerRadius:MTICornerRadiusMake(0) cornerCurve:MTICornerCurveCircular tintColor:tintColor blendMode:blendMode isHidden:NO scissorRect:CGRectNull];
 }
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(MTIMask *)mask compositingMask:(MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(nonnull MTIBlendMode)blendMode {
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode isHidden:(BOOL)isHidden scissorRect:(CGRect)scissorRect {
     if (self = [super init]) {
         _content = content;
         _contentRegion = contentRegion;
@@ -85,6 +85,8 @@
         _cornerCurve = cornerCurve;
         _tintColor = tintColor;
         _blendMode = blendMode;
+        _isHidden = isHidden;
+        _scissorRect = scissorRect;
     }
     return self;
 }

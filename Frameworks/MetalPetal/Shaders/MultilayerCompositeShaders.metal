@@ -535,7 +535,11 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
     textureCoordinate = modify_source_texture_coordinates(currentColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
-
+                                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -546,11 +550,27 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
         textureColor.a *= parameters.maskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
     }
     if (multilayer_composite_has_compositing_mask) {
-        float2 location = vertexIn.position.xy / parameters.canvasSize;
+        
+        float2 location = vertexIn.position.xy;
+        
+        if (parameters.compositingMaskRotation != 0) {
+            float rotation = -parameters.compositingMaskRotation;
+            location = transformPointCoord(location, rotation, parameters.compositingMaskPosition);
+        }
+        
+        float2 origin = parameters.compositingMaskPosition - parameters.compositingMaskSize * 0.5;
+        
+        location = (location - origin) / parameters.compositingMaskSize;
+        
+//        if (location.x < 0 || location.y < 0 || location.x > 1 || location.y > 1) {
+//            discard_fragment();
+//        }
+        
         float4 maskColor = compositingMaskTexture.sample(compositingMaskSampler, location);
         maskColor = parameters.compositingMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
-        float maskValue = maskColor[parameters.compositingMaskComponent];
-        textureColor.a *= parameters.compositingMaskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
+//        float maskValue = maskColor[parameters.compositingMaskComponent];
+//        textureColor.a *= parameters.compositingMaskUsesOneMinusValue ? (1.0 - maskValue) : maskValue;
+        textureColor.a *= maskColor.a;
     }
     if (multilayer_composite_has_tint_color) {
         textureColor.rgb = parameters.tintColor.rgb;
@@ -591,6 +611,11 @@ fragment float4 multilayerCompositeNormalBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -644,6 +669,10 @@ fragment float4 multilayerCompositeDarkenBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -699,6 +728,11 @@ fragment float4 multilayerCompositeDarkenBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -752,6 +786,10 @@ fragment float4 multilayerCompositeMultiplyBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -807,6 +845,11 @@ fragment float4 multilayerCompositeMultiplyBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -860,6 +903,10 @@ fragment float4 multilayerCompositeColorBurnBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -915,6 +962,11 @@ fragment float4 multilayerCompositeColorBurnBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -968,6 +1020,10 @@ fragment float4 multilayerCompositeLinearBurnBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1023,6 +1079,11 @@ fragment float4 multilayerCompositeLinearBurnBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1076,6 +1137,10 @@ fragment float4 multilayerCompositeDarkerColorBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1131,6 +1196,11 @@ fragment float4 multilayerCompositeDarkerColorBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1184,6 +1254,10 @@ fragment float4 multilayerCompositeLightenBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1239,6 +1313,11 @@ fragment float4 multilayerCompositeLightenBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1292,6 +1371,10 @@ fragment float4 multilayerCompositeScreenBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1347,6 +1430,11 @@ fragment float4 multilayerCompositeScreenBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1400,6 +1488,10 @@ fragment float4 multilayerCompositeColorDodgeBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1455,6 +1547,11 @@ fragment float4 multilayerCompositeColorDodgeBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1507,7 +1604,11 @@ fragment float4 multilayerCompositeAddBlend_programmableBlending(
     textureCoordinate = modify_source_texture_coordinates(currentColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
-
+                                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1563,6 +1664,11 @@ fragment float4 multilayerCompositeAddBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1616,6 +1722,10 @@ fragment float4 multilayerCompositeLighterColorBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1671,6 +1781,11 @@ fragment float4 multilayerCompositeLighterColorBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1724,6 +1839,10 @@ fragment float4 multilayerCompositeOverlayBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1779,6 +1898,11 @@ fragment float4 multilayerCompositeOverlayBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1831,7 +1955,11 @@ fragment float4 multilayerCompositeSoftLightBlend_programmableBlending(
     textureCoordinate = modify_source_texture_coordinates(currentColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
-
+                                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1887,6 +2015,11 @@ fragment float4 multilayerCompositeSoftLightBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1940,6 +2073,10 @@ fragment float4 multilayerCompositeHardLightBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -1995,6 +2132,11 @@ fragment float4 multilayerCompositeHardLightBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2048,6 +2190,10 @@ fragment float4 multilayerCompositeVividLightBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2103,6 +2249,11 @@ fragment float4 multilayerCompositeVividLightBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2156,6 +2307,10 @@ fragment float4 multilayerCompositeLinearLightBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2211,6 +2366,11 @@ fragment float4 multilayerCompositeLinearLightBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2264,6 +2424,10 @@ fragment float4 multilayerCompositePinLightBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2319,6 +2483,11 @@ fragment float4 multilayerCompositePinLightBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2372,6 +2541,10 @@ fragment float4 multilayerCompositeHardMixBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2427,6 +2600,11 @@ fragment float4 multilayerCompositeHardMixBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2480,6 +2658,10 @@ fragment float4 multilayerCompositeDifferenceBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2535,6 +2717,11 @@ fragment float4 multilayerCompositeDifferenceBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2587,7 +2774,11 @@ fragment float4 multilayerCompositeExclusionBlend_programmableBlending(
     textureCoordinate = modify_source_texture_coordinates(currentColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
-
+                                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2643,6 +2834,11 @@ fragment float4 multilayerCompositeExclusionBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2695,7 +2891,11 @@ fragment float4 multilayerCompositeSubtractBlend_programmableBlending(
     textureCoordinate = modify_source_texture_coordinates(currentColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
-
+                                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2751,6 +2951,11 @@ fragment float4 multilayerCompositeSubtractBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2804,6 +3009,10 @@ fragment float4 multilayerCompositeDivideBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2859,6 +3068,11 @@ fragment float4 multilayerCompositeDivideBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2911,7 +3125,11 @@ fragment float4 multilayerCompositeHueBlend_programmableBlending(
     textureCoordinate = modify_source_texture_coordinates(currentColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
-
+                                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -2967,6 +3185,11 @@ fragment float4 multilayerCompositeHueBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -3020,6 +3243,10 @@ fragment float4 multilayerCompositeSaturationBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -3075,6 +3302,11 @@ fragment float4 multilayerCompositeSaturationBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -3128,6 +3360,10 @@ fragment float4 multilayerCompositeColorBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -3183,6 +3419,11 @@ fragment float4 multilayerCompositeColorBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -3236,6 +3477,10 @@ fragment float4 multilayerCompositeLuminosityBlend_programmableBlending(
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
 
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }
@@ -3291,6 +3536,11 @@ fragment float4 multilayerCompositeLuminosityBlend(
     textureCoordinate = modify_source_texture_coordinates(backgroundColor, vertexIn.textureCoordinate, uint2(colorTexture.get_width(), colorTexture.get_height()));
     #endif
     float4 textureColor = colorTexture.sample(colorSampler, textureCoordinate);
+                                    
+    if (textureColor.a == 0) {
+        discard_fragment();
+    }
+                                    
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);
     }

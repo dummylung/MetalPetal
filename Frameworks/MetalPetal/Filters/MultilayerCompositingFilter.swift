@@ -72,6 +72,12 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var blendMode: MTIBlendMode = .normal
         
+        public var isHidden: Bool = false
+        
+        public var scissorRect: CGRect?
+        
+        public var id: UUID?
+        
         public init(content: MTIImage) {
             self.content = content
             self.contentRegion = content.extent
@@ -184,6 +190,11 @@ public class MultilayerCompositingFilter: MTIFilter {
         }
     }
     
+    public var scissorRect: CGRect {
+        get { internalFilter.scissorRect }
+        set { internalFilter.scissorRect = newValue }
+    }
+    
     public var outputPixelFormat: MTLPixelFormat {
         get { internalFilter.outputPixelFormat }
         set { internalFilter.outputPixelFormat = newValue }
@@ -238,7 +249,7 @@ extension MultilayerCompositingFilter {
 
 extension MultilayerCompositingFilter.Layer {
     fileprivate func bridgeToObjectiveC() -> MTILayer {
-        return MTILayer(content: self.content, contentRegion: self.contentRegion, contentFlipOptions: self.contentFlipOptions, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode)
+        return MTILayer(content: self.content, contentRegion: self.contentRegion, contentFlipOptions: self.contentFlipOptions, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, isHidden: self.isHidden, scissorRect: self.scissorRect ?? .null)
     }
 }
 

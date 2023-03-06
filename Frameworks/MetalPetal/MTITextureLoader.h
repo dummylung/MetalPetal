@@ -18,6 +18,10 @@ NS_ASSUME_NONNULL_BEGIN
                                           options:(nullable NSDictionary <MTKTextureLoaderOption, id> *)options
                                             error:(NSError *__nullable *__nullable)error;
 
+//- (nullable id<MTLTexture>)newTextureFromCVPixelBuffer:(CVPixelBufferRef)pixelBuffer
+//                                               options:(NSDictionary<MTKTextureLoaderOption,id> *)options
+//                                                 error:(NSError * _Nullable __autoreleasing *)error;
+    
 - (nullable id <MTLTexture>)newTextureWithContentsOfURL:(nonnull NSURL *)URL
                                                 options:(nullable NSDictionary <MTKTextureLoaderOption, id> *)options
                                                   error:(NSError *__nullable *__nullable)error;

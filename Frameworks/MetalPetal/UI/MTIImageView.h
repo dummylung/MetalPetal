@@ -17,6 +17,11 @@
 
 @class MTIImage,MTIContext;
 
+@protocol MTIImageViewDelegate <NSObject>
+- (void)didRender:(nullable MTIImage *)image;
+- (void)willRender:(nullable MTIImage *)image;
+@end
+
 NS_ASSUME_NONNULL_BEGIN
 
 __attribute__((objc_subclassing_restricted))
@@ -36,6 +41,8 @@ __attribute__((objc_subclassing_restricted))
 @property (nonatomic, strong, nullable) MTIImage *image;
 
 @property (nonatomic) BOOL drawsImmediately __attribute__((deprecated("Set `drawsImmediately` to `YES` is not recommended anymore. Please file an issue describing how you'd like to use this feature. https://github.com/MetalPetal/MetalPetal"))); //Default `NO`.
+
+@property(nonatomic, weak) id <MTIImageViewDelegate> delegate;
 
 @end
 

@@ -966,7 +966,9 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                                          rotation:compositingMask.rotation
                                                             depth:compositingMask.depth
                                                      offsetJitter:compositingMask.offsetJitter
-                                                        blendMode:compositingMask.blendMode];
+                                                        blendMode:compositingMask.blendMode
+                                                         position:compositingMask.position
+                                                             size:compositingMask.size];
         }
         if (mask) {
             MTIImage *newMaskContent = dependencies[pointer];
@@ -981,7 +983,9 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                               rotation:mask.rotation
                                                  depth:mask.depth
                                           offsetJitter:mask.offsetJitter
-                                             blendMode:mask.blendMode];
+                                             blendMode:mask.blendMode
+                                              position:mask.position
+                                                  size:mask.size];
         }
         if (materialMask) {
             MTIImage *newMaterialMaskContent = dependencies[pointer];
@@ -1002,7 +1006,9 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                                             blendMode1:materialMask.blendMode1
                                                                 depth2:materialMask.depth2
                                                         depth2Inverted:materialMask.depth2Inverted
-                                                            blendMode2:materialMask.blendMode2];
+                                                            blendMode2:materialMask.blendMode2
+                                                              position:materialMask.position
+                                                                  size:materialMask.size];
         }
         if (clippingMask) {
             MTIImage *newClippingMaskContent = dependencies[pointer];

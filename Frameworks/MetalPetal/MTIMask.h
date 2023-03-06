@@ -40,16 +40,19 @@ typedef NS_ENUM(NSInteger, MTIMaskType) {
 @property (nonatomic, readonly) CGFloat movement;
 @property (nonatomic, readonly) CGFloat scale;
 @property (nonatomic, readonly) CGFloat zoom;
-@property (nonatomic, readonly) CGFloat rotation;
+@property (nonatomic, readwrite) CGFloat rotation;
 @property (nonatomic, readonly) CGFloat depth;
 @property (nonatomic, readonly) CGPoint offsetJitter;
 @property (nonatomic, readonly) MTIBlendMode blendMode;
+
+@property (nonatomic, readwrite) CGPoint position;
+@property (nonatomic, readwrite) CGSize size;
 
 - (instancetype)init NS_UNAVAILABLE;
 
 + (instancetype)new NS_UNAVAILABLE;
 
-- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode type:(MTIMaskType)type movement:(CGFloat)movement scale:(CGFloat)scale zoom:(CGFloat)zoom rotation:(CGFloat)rotation depth:(CGFloat)depth offsetJitter:(CGPoint)offsetJitter blendMode:(MTIBlendMode)blendMode NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode type:(MTIMaskType)type movement:(CGFloat)movement scale:(CGFloat)scale zoom:(CGFloat)zoom rotation:(CGFloat)rotation depth:(CGFloat)depth offsetJitter:(CGPoint)offsetJitter blendMode:(MTIBlendMode)blendMode position:(CGPoint)position size:(CGSize)size NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode;
 

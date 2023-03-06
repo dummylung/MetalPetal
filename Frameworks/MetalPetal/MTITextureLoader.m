@@ -165,6 +165,38 @@
     }
 }
 
+//- (nullable id<MTLTexture>)newTextureFromCVPixelBuffer:(CVPixelBufferRef)pixelBuffer
+////                                            properties:(MTIImageProperties *)properties
+//                                               options:(NSDictionary<MTKTextureLoaderOption,id> *)options
+//                                                 error:(NSError * _Nullable __autoreleasing *)error {
+//    if (_error) {
+//        if (error) {
+//            *error = _error;
+//        }
+//        return nil;
+//    } else {
+//        BOOL useSRGBTexture = NO;
+//        if (options[MTKTextureLoaderOptionSRGB] == nil) {
+//            useSRGBTexture = YES;
+//        } else {
+//            useSRGBTexture = [options[MTKTextureLoaderOptionSRGB] boolValue];
+//        }
+//        MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:useSRGBTexture ? MTLPixelFormatBGRA8Unorm_sRGB : MTLPixelFormatBGRA8Unorm width:CVPixelBufferGetWidth(pixelBuffer) height:CVPixelBufferGetHeight(pixelBuffer) mipmapped:NO];
+//        if (options[MTKTextureLoaderOptionTextureUsage]) {
+//            textureDescriptor.usage = [options[MTKTextureLoaderOptionTextureUsage] unsignedIntegerValue];
+//        } else {
+//            textureDescriptor.usage = MTLTextureUsageShaderRead;
+//        }
+//        if (options[MTKTextureLoaderOptionTextureStorageMode]) {
+//            textureDescriptor.storageMode = [options[MTKTextureLoaderOptionTextureStorageMode] unsignedIntegerValue];
+//        }
+//        if (options[MTKTextureLoaderOptionTextureCPUCacheMode]) {
+//            textureDescriptor.cpuCacheMode = [options[MTKTextureLoaderOptionTextureCPUCacheMode] unsignedIntegerValue];
+//        }
+//        return [_cvMetalTextureBridging newTextureWithCVImageBuffer:pixelBuffer textureDescriptor:textureDescriptor planeIndex:0 error:error].texture;
+//    }
+//}
+
 - (BOOL)prefersCVPixelBufferLoaderForImageWithProperties:(MTIImageProperties *)properties {
     if (!properties) {
         return NO;

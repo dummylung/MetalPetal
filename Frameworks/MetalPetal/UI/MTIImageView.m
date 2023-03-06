@@ -184,11 +184,11 @@
     }
 }
 
-- (void)layoutSubviews {
-    [super layoutSubviews];
-    [self updateContentScaleFactor];
-    [self setNeedsRedraw];
-}
+//- (void)layoutSubviews {
+//    [super layoutSubviews];
+//    [self updateContentScaleFactor];
+//    [self setNeedsRedraw];
+//}
 
 - (void)setNeedsRedraw {
     MTKView *renderView = _renderView;
@@ -218,9 +218,15 @@
             if (imageToRender) {
                 MTIDrawableRenderingRequest *request = [[MTIDrawableRenderingRequest alloc] initWithDrawableProvider:view resizingMode:_resizingMode];
                 NSError *error;
+                if ([self.delegate respondsToSelector:@selector(willRender:)]) {
+                    [self.delegate willRender:imageToRender];
+                }
                 [context renderImage:imageToRender toDrawableWithRequest:request error:&error];
                 if (error) {
                     MTIPrint(@"%@: Failed to render image %@ - %@",self,imageToRender,error);
+                }
+                if ([self.delegate respondsToSelector:@selector(didRender:)]) {
+                    [self.delegate didRender:imageToRender];
                 }
             } else {
                 //Clear current drawable.
