@@ -834,11 +834,14 @@ __attribute__((objc_subclassing_restricted))
         NSMutableArray *dependencies = [NSMutableArray arrayWithCapacity:layers.count + 1];
         [dependencies addObject:backgroundImage];
         for (MTILayer *layer in layers) {
+            if (layer.content == nil) {
+                continue;
+            }
             [dependencies addObject:layer.content];
-            if (layer.compositingMask) {
+            if (layer.compositingMask && layer.compositingMask.content) {
                 [dependencies addObject:layer.compositingMask.content];
             }
-            if (layer.mask) {
+            if (layer.mask && layer.mask.content) {
                 [dependencies addObject:layer.mask.content];
             }
         }
