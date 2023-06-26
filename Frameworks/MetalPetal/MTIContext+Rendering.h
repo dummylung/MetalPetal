@@ -76,6 +76,8 @@ NS_ASSUME_NONNULL_BEGIN
                                              error:(NSError **)error
                                         completion:(nullable void (^)(MTIRenderTask *task))completion NS_SWIFT_NAME(startTask(toRender:completion:));
 
+- (void)startTaskToPreloadImage:(MTIImage *)image NS_SWIFT_NAME(startTask(toPreload:));
+
 @end
 
 NS_ASSUME_NONNULL_END
