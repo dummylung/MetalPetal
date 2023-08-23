@@ -86,6 +86,27 @@ public class MultilayerCompositingFilter: MTIFilter {
             self.position = CGPoint(x: content.size.width/2, y: content.size.height/2)
         }
         
+        func copy() -> MultilayerCompositingFilter.Layer {
+            var layer = MultilayerCompositingFilter.Layer(content: content)
+            layer.id = id
+            layer.contentRegion = contentRegion
+            layer.contentFlipOptions = contentFlipOptions
+            layer.mask = mask
+            layer.compositingMask = compositingMask
+            layer.layoutUnit = layoutUnit
+            layer.position = position
+            layer.size = size
+            layer.rotation = rotation
+            layer.opacity = opacity
+            layer.cornerRadius = cornerRadius
+            layer.cornerCurve = cornerCurve
+            layer.tintColor = tintColor
+            layer.blendMode = blendMode
+            layer.isHidden = isHidden
+            layer.scissorRect = scissorRect
+            return layer
+        }
+        
         public func hash(into hasher: inout Hasher) {
             hasher.combine(content)
             hasher.combine(contentRegion.origin.x)
