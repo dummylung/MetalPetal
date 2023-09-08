@@ -562,6 +562,13 @@ fragment float4 multilayerCompositeNormalBlend_programmableBlending(
         
         location = (location - origin) / parameters.compositingMaskSize;
         
+        if (parameters.compositingMaskFlipX) {
+            location.y = 1 - location.y; // why is y not x? nevermind it just works :)
+        }
+        if (parameters.compositingMaskFlipY) {
+            location.y = 1 - location.y;
+        }
+        
 //        if (location.x < 0 || location.y < 0 || location.x > 1 || location.y > 1) {
 //            discard_fragment();
 //        }

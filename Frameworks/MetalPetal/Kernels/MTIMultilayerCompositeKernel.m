@@ -555,6 +555,8 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskRotation = layer.compositingMask.rotation;
         parameters.compositingMaskPosition = simd_make_float2(layer.compositingMask.position.x, layer.compositingMask.position.y);
         parameters.compositingMaskSize = simd_make_float2(layer.compositingMask.size.width, layer.compositingMask.size.height);
+        parameters.compositingMaskFlipX = layer.compositingMask.contentFlipOptions & MTILayerFlipOptionsFlipHorizontally;
+        parameters.compositingMaskFlipY = layer.compositingMask.contentFlipOptions & MTILayerFlipOptionsFlipVertically;
 //        NSLog(@"%f %f %f %f %f", parameters.compositingMaskPosition.x, parameters.compositingMaskPosition.y, parameters.compositingMaskSize.x, parameters.compositingMaskSize.y, parameters.compositingMaskRotation);
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;

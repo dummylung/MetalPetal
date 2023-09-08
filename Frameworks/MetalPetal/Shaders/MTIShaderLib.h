@@ -68,6 +68,8 @@ struct MTIMultilayerBrushCompositingLayerShadingParameters {
     float compositingMaskDepth;
     vector_float2 compositingMaskOffsetJitter;
     int compositingMaskBlendMode;
+    bool compositingMaskFlipX;
+    bool compositingMaskFlipY;
     
     int materialMaskComponent;
     bool materialMaskHasPremultipliedAlpha;
@@ -125,6 +127,8 @@ struct MTIMultilayerCompositingLayerShadingParameters {
     float compositingMaskRotation;
     vector_float2 compositingMaskPosition;
     vector_float2 compositingMaskSize;
+    bool compositingMaskFlipX;
+    bool compositingMaskFlipY;
     
     vector_float4 tintColor;
     vector_float4 cornerRadius;

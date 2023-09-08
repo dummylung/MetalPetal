@@ -12,6 +12,7 @@
 #else
 #import "MTIColor.h"
 #import "MTIBlendModes.h"
+#import "MTILayer.h"
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
@@ -47,12 +48,13 @@ typedef NS_ENUM(NSInteger, MTIMaskType) {
 
 @property (nonatomic, readwrite) CGPoint position;
 @property (nonatomic, readwrite) CGSize size;
+@property (nonatomic, readwrite) MTILayerFlipOptions contentFlipOptions;
 
 - (instancetype)init NS_UNAVAILABLE;
 
 + (instancetype)new NS_UNAVAILABLE;
 
-- (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode type:(MTIMaskType)type movement:(CGFloat)movement scale:(CGFloat)scale zoom:(CGFloat)zoom rotation:(CGFloat)rotation depth:(CGFloat)depth offsetJitter:(CGPoint)offsetJitter blendMode:(MTIBlendMode)blendMode position:(CGPoint)position size:(CGSize)size NS_DESIGNATED_INITIALIZER;
+- (instancetype)initWithContent:(MTIImage *)content contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions component:(MTIColorComponent)component mode:(MTIMaskMode)mode type:(MTIMaskType)type movement:(CGFloat)movement scale:(CGFloat)scale zoom:(CGFloat)zoom rotation:(CGFloat)rotation depth:(CGFloat)depth offsetJitter:(CGPoint)offsetJitter blendMode:(MTIBlendMode)blendMode position:(CGPoint)position size:(CGSize)size NS_DESIGNATED_INITIALIZER;
 
 - (instancetype)initWithContent:(MTIImage *)content component:(MTIColorComponent)component mode:(MTIMaskMode)mode;
 

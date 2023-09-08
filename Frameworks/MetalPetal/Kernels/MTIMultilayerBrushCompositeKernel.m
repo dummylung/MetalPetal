@@ -606,6 +606,8 @@ __attribute__((objc_subclassing_restricted))
         parameters.compositingMaskScale = layer.compositingMask.scale;        
         parameters.compositingMaskZoom = layer.compositingMask.zoom;
         parameters.compositingMaskRotation = layer.compositingMask.rotation;
+        parameters.compositingMaskFlipX = layer.compositingMask.contentFlipOptions & MTILayerFlipOptionsFlipHorizontally;
+        parameters.compositingMaskFlipY = layer.compositingMask.contentFlipOptions & MTILayerFlipOptionsFlipVertically;
         parameters.compositingMaskDepth = layer.compositingMask.depth;
         parameters.compositingMaskBlendMode = (int)[allCases indexOfObject:layer.compositingMask.blendMode];
         parameters.compositingMaskOffsetJitter = simd_make_float2(layer.compositingMask.offsetJitter.x, layer.compositingMask.offsetJitter.y);
@@ -957,6 +959,7 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
             MTIImage *newCompositingMaskContent = dependencies[pointer];
             pointer += 1;
             newCompositingMask = [[MTIMask alloc] initWithContent:newCompositingMaskContent
+                                               contentFlipOptions:compositingMask.contentFlipOptions
                                                         component:compositingMask.component
                                                              mode:compositingMask.mode
                                                              type:compositingMask.type
@@ -974,6 +977,7 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
             MTIImage *newMaskContent = dependencies[pointer];
             pointer += 1;
             newMask = [[MTIMask alloc] initWithContent:newMaskContent
+                                    contentFlipOptions:mask.contentFlipOptions
                                              component:mask.component
                                                   mode:mask.mode
                                                   type:mask.type
@@ -991,6 +995,7 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
             MTIImage *newMaterialMaskContent = dependencies[pointer];
             pointer += 1;
             newMaterialMask = [[MTIMaterialMask alloc] initWithContent:newMaterialMaskContent
+                                                    contentFlipOptions:materialMask.contentFlipOptions
                                                              component:materialMask.component
                                                                   mode:materialMask.mode
                                                                   type:materialMask.type
