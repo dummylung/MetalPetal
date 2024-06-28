@@ -283,6 +283,9 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
         textureColor.rgb = parameters.tintColor.rgb;
     }
     
+    float4 maskColor;
+    float materialMaskValue;
+    
     if (multilayer_composite_has_material_mask && textureColor.a > 0 && !isEmpty) {
 //        float scale = parameters.materialMaskScale;
 //        float x = vertexIn.position.x / (materialMaskTexture.get_width() * scale);
@@ -347,18 +350,19 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
             }
         }
         
-        float4 maskColor = materialMaskTexture.sample(materialMaskSampler, float2(x, y));
+        maskColor = materialMaskTexture.sample(materialMaskSampler, float2(x, y));
         maskColor = parameters.materialMaskHasPremultipliedAlpha ? unpremultiply(maskColor) : maskColor;
+        
+        materialMaskValue = maskColor.a;
+        if (materialMaskValue < 0.01) {
+            discard_fragment();
+        }
         
         if (parameters.materialMaskUsesOneMinusValue) {
             maskColor = float4(1.0-maskColor.r,1.0-maskColor.g,1.0-maskColor.b,maskColor.a);
         }
-
-        if (maskColor.a < 0.01) {
-            
-            textureColor.a *= 0; // solution for transparent image
-            
-        } else if (parameters.materialMaskDepth >= 0.01) {
+         
+        if (parameters.materialMaskDepth >= 0.01) {
 
             maskColor.a *= parameters.materialMaskDepth;
 
@@ -497,8 +501,16 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
     }
     
     if (multilayer_composite_has_clipping_mask) {
-        if (clippingMaskValue > 0.01) {
+        if (clippingMaskValue >= 0.01) {
             finalColor.a = min(finalColor.a, clippingMaskValue);
+        } else {
+            finalColor.a = 0;
+        }
+    }
+    
+    if (multilayer_composite_has_material_mask) {
+        if (materialMaskValue >= 0.01) {
+            finalColor.a = min(finalColor.a, materialMaskValue);
         } else {
             finalColor.a = 0;
         }
