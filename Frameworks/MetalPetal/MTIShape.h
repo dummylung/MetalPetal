@@ -24,6 +24,12 @@ typedef NS_OPTIONS(NSUInteger, MTIShapeFlipOptions) {
     MTIShapeFlipOptionsFlipHorizontally = 1 << 1,
 } NS_SWIFT_NAME(MTIShape.FlipOptions);
 
+typedef NS_ENUM(NSUInteger, MTIShapeMagMinFilterOption) {
+    MTIShapeMagMinFilterOptionNearest = 0,
+    MTIShapeMagMinFilterOptionLinear,
+    MTIShapeMagMinFilterOptionBicubic,
+} NS_SWIFT_NAME(MTIShape.MagMinFilterOption);
+
 __attribute__((objc_subclassing_restricted))
 @interface MTIShape : NSObject <NSCopying>
 
@@ -33,6 +39,7 @@ __attribute__((objc_subclassing_restricted))
 @property (nonatomic, readonly) int count;
 @property (nonatomic, readonly) CGFloat countJitter;
 @property (nonatomic, readonly) MTIShapeFlipOptions flipOptions;
+@property (nonatomic, readonly) MTIShapeMagMinFilterOption magMinFilterOption;
 
 - (instancetype)init;
 
@@ -43,7 +50,8 @@ __attribute__((objc_subclassing_restricted))
                          rotation:(CGFloat)rotation
                            count:(int)count
                      countJitter:(CGFloat)countJitter
-                     flipOptions:(MTIShapeFlipOptions)flipOptions NS_DESIGNATED_INITIALIZER;
+                     flipOptions:(MTIShapeFlipOptions)flipOptions
+              magMinFilterOption:(MTIShapeMagMinFilterOption)magMinFilterOption NS_DESIGNATED_INITIALIZER;
 
 @end
 

@@ -50,6 +50,7 @@ struct MTIMultilayerBrushCompositingLayerShadingParameters {
     float shapeRotation;
     bool shapeFlipX;
     bool shapeFlipY;
+    int shapeMagMinFilter;
     
     int maskComponent;
     bool maskHasPremultipliedAlpha;

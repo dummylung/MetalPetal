@@ -171,8 +171,17 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
     }
 //    float4 textureColor = colorTexture.sample(colorSampler, shapePosition);
     
-    constexpr sampler textureSampler(mag_filter::bicubic, min_filter::bicubic);
-    float4 textureColor = colorTexture.sample(textureSampler, shapePosition);
+    float4 textureColor;
+    if (parameters.shapeMagMinFilter == 0) {
+        constexpr sampler textureSampler(mag_filter::nearest, min_filter::nearest);
+        textureColor = colorTexture.sample(textureSampler, shapePosition);
+    } else if (parameters.shapeMagMinFilter == 1) {
+        constexpr sampler textureSampler(mag_filter::linear, min_filter::linear);
+        textureColor = colorTexture.sample(textureSampler, shapePosition);
+    } else if (parameters.shapeMagMinFilter == 2) {
+        constexpr sampler textureSampler(mag_filter::bicubic, min_filter::bicubic);
+        textureColor = colorTexture.sample(textureSampler, shapePosition);
+    }
     
     if (multilayer_composite_content_premultiplied) {
         textureColor = unpremultiply(textureColor);

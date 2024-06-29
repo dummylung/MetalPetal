@@ -14,7 +14,8 @@
                          rotation:(CGFloat)rotation
                            count:(int)count
                      countJitter:(CGFloat)countJitter
-                     flipOptions:(MTIShapeFlipOptions)flipOptions {
+                     flipOptions:(MTIShapeFlipOptions)flipOptions
+              magMinFilterOption:(MTIShapeMagMinFilterOption)magMinFilterOption {
     if (self = [super init]) {
         _component = component;
         _mode = mode;
@@ -22,12 +23,13 @@
         _count = count;
         _countJitter = countJitter;
         _flipOptions = flipOptions;
+        _magMinFilterOption = magMinFilterOption;
     }
     return self;
 }
 
 - (instancetype)init {
-    return [self initWithComponent:MTIColorComponentRed mode:MTIMaskModeNormal rotation:0 count:1 countJitter:0 flipOptions:MTIShapeFlipOptionsDonotFlip];
+    return [self initWithComponent:MTIColorComponentRed mode:MTIMaskModeNormal rotation:0 count:1 countJitter:0 flipOptions:MTIShapeFlipOptionsDonotFlip magMinFilterOption:MTIShapeMagMinFilterOptionNearest];
 }
 
 - (id)copyWithZone:(NSZone *)zone {

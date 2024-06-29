@@ -641,7 +641,7 @@ __attribute__((objc_subclassing_restricted))
         parameters.shapeRotation = layer.shape.rotation;
         parameters.shapeFlipX = layer.shape.flipOptions & MTIShapeFlipOptionsFlipHorizontally;
         parameters.shapeFlipY = layer.shape.flipOptions & MTIShapeFlipOptionsFlipVertically;
-        
+        parameters.shapeMagMinFilter = (int)layer.shape.magMinFilterOption;
         parameters.maskComponent = (int)layer.mask.component;
         parameters.maskUsesOneMinusValue = layer.mask.mode == MTIMaskModeOneMinusMaskValue;
         parameters.maskHasPremultipliedAlpha = layer.mask.content.alphaType == MTIAlphaTypePremultiplied;
