@@ -131,7 +131,7 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
 //    }
     
 //    constexpr sampler s(coord::normalized, address::clamp_to_zero, filter::linear);
-    constexpr sampler backgroundSampler(mag_filter::nearest, min_filter::nearest);
+    constexpr sampler backgroundSampler(mag_filter::linear, min_filter::linear);
     float2 location = vertexIn.position.xy / parameters.canvasSize;
     float4 backgroundTextureBeforeCurrentSessionColor = backgroundTextureBeforeCurrentSession.sample(backgroundSampler, location);
     if (parameters.isAlphaLocked && backgroundTextureBeforeCurrentSessionColor.a == 0) {
@@ -140,7 +140,7 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
     
     float clippingMaskValue = 1;
     if (multilayer_composite_has_clipping_mask) {
-        constexpr sampler clippingMaskSampler(mag_filter::nearest, min_filter::nearest);
+        constexpr sampler clippingMaskSampler(mag_filter::linear, min_filter::linear);
         float4 clippingMaskTextureColor = clippingMaskTexture.sample(clippingMaskSampler, location);
         clippingMaskValue = clippingMaskTextureColor[parameters.clippingMaskComponent];
         if (clippingMaskValue < 0.01) {
@@ -203,7 +203,7 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
     }
     
     if (multilayer_composite_has_compositing_mask && !isEmpty) {
-        constexpr sampler compositingMaskSampler(mag_filter::nearest, min_filter::nearest);
+        constexpr sampler compositingMaskSampler(mag_filter::linear, min_filter::linear);
 //        float2 location = vertexIn.position.xy / parameters.canvasSize;
         float scale = parameters.compositingMaskScale;
         float zoom = parameters.compositingMaskZoom*0.2+1;
@@ -302,7 +302,7 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
 //        x = x - (int)x;
 //        y = y - (int)y;
         
-        constexpr sampler materialMaskSampler(mag_filter::nearest, min_filter::nearest);
+        constexpr sampler materialMaskSampler(mag_filter::linear, min_filter::linear);
         float scale = parameters.materialMaskScale;
 //        float zoom = parameters.materialMaskZoom*0.2+1;
         float zoom = 1.0;
