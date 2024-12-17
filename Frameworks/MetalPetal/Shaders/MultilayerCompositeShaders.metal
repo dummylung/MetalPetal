@@ -505,6 +505,18 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
         case 3: // replace
             finalColor.rgba = textureColor.rgba;
             break;
+        case 4: { // percentage
+            float d = currentColor.a - textureColor.a;
+            finalColor.rgba = float4(currentColor.r * d + textureColor.r * (1 - d),
+                                     currentColor.g * d + textureColor.g * (1 - d),
+                                     currentColor.b * d + textureColor.b * (1 - d),
+                                     currentColor.a);
+            break;
+        }
+        case 5: { // blend
+            finalColor.rgba = normalBlend(textureColor, currentColor);
+            break;
+        }
         default:
             break;
     }

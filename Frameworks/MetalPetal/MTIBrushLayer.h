@@ -35,6 +35,8 @@ typedef NS_ENUM(NSInteger, MTIBrushLayerFillMode) {
     MTIBrushLayerFillModeSubtract,
     MTIBrushLayerFillModeSmudge,
     MTIBrushLayerFillModeReplace,
+    MTIBrushLayerFillModePercentage,
+    MTIBrushLayerFillModeBlend,
 } NS_SWIFT_NAME(MTIBrushLayer.FillMode);
 
 typedef NS_ENUM(NSInteger, MTIBrushLayerRenderingMode) {
