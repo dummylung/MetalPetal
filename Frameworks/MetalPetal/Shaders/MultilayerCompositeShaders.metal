@@ -540,13 +540,13 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
         }
     }
     
-    if (multilayer_composite_has_clipping_mask_2) {
-        if (clippingMask2Value >= 0.01) {
-            finalColor.a = min(finalColor.a, clippingMask2Value);
-        } else {
-            finalColor.a = 0;
-        }
-    }
+//    if (multilayer_composite_has_clipping_mask_2) {
+//        if (clippingMask2Value >= 0.01) {
+//            finalColor.a = min(finalColor.a, clippingMask2Value);
+//        } else {
+//            finalColor.a = 0;
+//        }
+//    }
     
     if (multilayer_composite_has_material_mask) {
         if (materialMaskValue >= 0.01) {
