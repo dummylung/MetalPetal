@@ -114,11 +114,12 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
                                                                     texture2d<float, access::sample> maskTexture [[ texture(2) ]],
 //                                                                    sampler maskSampler [[ sampler(2) ]],
                                                                     texture2d<float, access::sample> materialMaskTexture [[ texture(3) ]],
-                                                                    texture2d<float, access::sample> clippingMaskTexture [[ texture(4) ]],
+                                                                    texture2d<float, access::sample> clippingMask1Texture [[ texture(4) ]],
+                                                                    texture2d<float, access::sample> clippingMask2Texture [[ texture(5) ]],
 //                                                                    sampler materialMaskSampler [[ sampler(3) ]]
-                                                                    texture2d<float, access::sample> backgroundTexture [[ texture(5) ]],
+                                                                    texture2d<float, access::sample> backgroundTexture [[ texture(6) ]],
 //                                                                    sampler backgroundSampler [[ sampler(3) ]],
-                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(6) ]]
+                                                                    texture2d<float, access::sample> backgroundTextureBeforeCurrentSession [[ texture(7) ]]
 //                                                                    sampler backgroundSamplerBeforeCurrentSession [[ sampler(4) ]]
                                                                     ) {
     
@@ -138,12 +139,22 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
         discard_fragment();
     }
     
-    float clippingMaskValue = 1;
-    if (multilayer_composite_has_clipping_mask) {
+    float clippingMask1Value = 1;
+    if (multilayer_composite_has_clipping_mask_1) {
         constexpr sampler clippingMaskSampler(mag_filter::linear, min_filter::linear);
-        float4 clippingMaskTextureColor = clippingMaskTexture.sample(clippingMaskSampler, location);
-        clippingMaskValue = clippingMaskTextureColor[parameters.clippingMaskComponent];
-        if (clippingMaskValue < 0.01) {
+        float4 clippingMask1TextureColor = clippingMask1Texture.sample(clippingMaskSampler, location);
+        clippingMask1Value = clippingMask1TextureColor[parameters.clippingMask1Component];
+        if (clippingMask1Value < 0.01) {
+            discard_fragment();
+        }
+    }
+    
+    float clippingMask2Value = 1;
+    if (multilayer_composite_has_clipping_mask_2) {
+        constexpr sampler clippingMaskSampler(mag_filter::linear, min_filter::linear);
+        float4 clippingMask2TextureColor = clippingMask2Texture.sample(clippingMaskSampler, location);
+        clippingMask2Value = clippingMask2TextureColor[parameters.clippingMask2Component];
+        if (clippingMask2Value < 0.01) {
             discard_fragment();
         }
     }
@@ -521,9 +532,17 @@ fragment float4 multilayerBrushCompositeNormalBlend_programmableBlending(MTIMult
             break;
     }
     
-    if (multilayer_composite_has_clipping_mask) {
-        if (clippingMaskValue >= 0.01) {
-            finalColor.a = min(finalColor.a, clippingMaskValue);
+    if (multilayer_composite_has_clipping_mask_1) {
+        if (clippingMask1Value >= 0.01) {
+            finalColor.a = min(finalColor.a, clippingMask1Value);
+        } else {
+            finalColor.a = 0;
+        }
+    }
+    
+    if (multilayer_composite_has_clipping_mask_2) {
+        if (clippingMask2Value >= 0.01) {
+            finalColor.a = min(finalColor.a, clippingMask2Value);
         } else {
             finalColor.a = 0;
         }

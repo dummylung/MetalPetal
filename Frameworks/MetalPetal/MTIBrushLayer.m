@@ -83,14 +83,15 @@
 //                        fillMode:MTIBrushLayerFillModeNormal];
 //}
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(MTIMask *)mask compositingMask:(MTIMask *)compositingMask materialMask:(MTIMaterialMask *)materialMask clippingMask:(nullable MTIMask *)clippingMask layoutUnit:(MTIBrushLayerLayoutUnit)layoutUnit position:(CGPoint)position startPosition:(CGPoint)startPosition lastPosition:(CGPoint)lastPosition size:(CGSize)size startSize:(CGSize)startSize rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(nonnull MTIBlendMode)blendMode renderingMode:(MTIBrushLayerRenderingMode)renderingMode renderingBlendMode:(MTIBlendMode)renderingBlendMode fillMode:(MTIBrushLayerFillMode)fillMode shape:(MTIShape *)shape isAlphaLocked:(BOOL)isAlphaLocked {
+- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion mask:(MTIMask *)mask compositingMask:(MTIMask *)compositingMask materialMask:(MTIMaterialMask *)materialMask clippingMask1:(nullable MTIMask *)clippingMask1 clippingMask2:(nullable MTIMask *)clippingMask2 layoutUnit:(MTIBrushLayerLayoutUnit)layoutUnit position:(CGPoint)position startPosition:(CGPoint)startPosition lastPosition:(CGPoint)lastPosition size:(CGSize)size startSize:(CGSize)startSize rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(nonnull MTIBlendMode)blendMode renderingMode:(MTIBrushLayerRenderingMode)renderingMode renderingBlendMode:(MTIBlendMode)renderingBlendMode fillMode:(MTIBrushLayerFillMode)fillMode shape:(MTIShape *)shape isAlphaLocked:(BOOL)isAlphaLocked {
     if (self = [super init]) {
         _content = content;
         _contentRegion = contentRegion;
         _mask = mask;
         _compositingMask = compositingMask;
         _materialMask = materialMask;
-        _clippingMask = clippingMask;
+        _clippingMask1 = clippingMask1;
+        _clippingMask2 = clippingMask2;
         _layoutUnit = layoutUnit;
         _position = position;
         _startPosition = startPosition;

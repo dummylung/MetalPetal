@@ -79,7 +79,8 @@ __attribute__((objc_subclassing_restricted))
     BOOL _hasContentMask;
     BOOL _hasCompositingMask;
     BOOL _hasMaterialMask;
-    BOOL _hasClippingMask;
+    BOOL _hasClippingMask1;
+    BOOL _hasClippingMask2;
     BOOL _hasTintColor;
     short _cornerCurveType; // none: 0, circular: 1, continuous: 2
 }
@@ -95,7 +96,8 @@ __attribute__((objc_subclassing_restricted))
         _hasContentMask = layer.mask != nil;
         _hasCompositingMask = layer.compositingMask != nil;
         _hasMaterialMask = layer.materialMask != nil;
-        _hasClippingMask = layer.clippingMask != nil;
+        _hasClippingMask1 = layer.clippingMask1 != nil;
+        _hasClippingMask2 = layer.clippingMask2 != nil;
         _hasTintColor = layer.tintColor.alpha > 0;
         switch (layer.cornerCurve) {
             case MTICornerCurveCircular:
@@ -127,7 +129,8 @@ __attribute__((objc_subclassing_restricted))
         other->_hasContentMask == _hasContentMask &&
         other->_hasCompositingMask == _hasCompositingMask &&
         other->_hasMaterialMask == _hasMaterialMask &&
-        other->_hasClippingMask == _hasClippingMask &&
+        other->_hasClippingMask1 == _hasClippingMask1 &&
+        other->_hasClippingMask2 == _hasClippingMask2 &&
         other->_hasTintColor == _hasTintColor &&
         other->_cornerCurveType == _cornerCurveType;
     }
@@ -141,7 +144,8 @@ __attribute__((objc_subclassing_restricted))
     MTIHasherCombine(&hasher, (uint64_t)_hasContentMask);
     MTIHasherCombine(&hasher, (uint64_t)_hasCompositingMask);
     MTIHasherCombine(&hasher, (uint64_t)_hasMaterialMask);
-    MTIHasherCombine(&hasher, (uint64_t)_hasClippingMask);
+    MTIHasherCombine(&hasher, (uint64_t)_hasClippingMask1);
+    MTIHasherCombine(&hasher, (uint64_t)_hasClippingMask2);
     MTIHasherCombine(&hasher, (uint64_t)_hasTintColor);
     MTIHasherCombine(&hasher, (uint64_t)_cornerCurveType);
     return MTIHasherFinalize(&hasher);
@@ -162,7 +166,8 @@ __attribute__((objc_subclassing_restricted))
     [constants setConstantValue:&_hasContentMask type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_mask"];
     [constants setConstantValue:&_hasCompositingMask type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_compositing_mask"];
     [constants setConstantValue:&_hasMaterialMask type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_material_mask"];
-    [constants setConstantValue:&_hasClippingMask type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_clipping_mask"];
+    [constants setConstantValue:&_hasClippingMask1 type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_clipping_mask_1"];
+    [constants setConstantValue:&_hasClippingMask2 type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_clipping_mask_2"];
     [constants setConstantValue:&_hasTintColor type:MTLDataTypeBool withName:@"metalpetal::multilayer_composite_has_tint_color"];
     [constants setConstantValue:&_cornerCurveType type:MTLDataTypeShort withName:@"metalpetal::multilayer_composite_corner_curve_type"];
     return [fragmentFunctionDescriptorForBlending functionDescriptorWithConstantValues:constants];
@@ -570,15 +575,20 @@ __attribute__((objc_subclassing_restricted))
 //            [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:layer.materialMask.content] atIndex:3];
         }
         
-        if (layer.clippingMask) {
-            NSParameterAssert(layer.clippingMask.content.alphaType != MTIAlphaTypeUnknown);
-            [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.clippingMask.content] atIndex:4];
+        if (layer.clippingMask1) {
+            NSParameterAssert(layer.clippingMask1.content.alphaType != MTIAlphaTypeUnknown);
+            [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.clippingMask1.content] atIndex:4];
         }
         
-        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImage] atIndex:5];
+        if (layer.clippingMask2) {
+            NSParameterAssert(layer.clippingMask2.content.alphaType != MTIAlphaTypeUnknown);
+            [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:layer.clippingMask2.content] atIndex:5];
+        }
+        
+        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImage] atIndex:6];
 //        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImage] atIndex:3];
         
-        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImageBeforeCurrentSession] atIndex:6];
+        [commandEncoder setFragmentTexture:[renderingContext resolvedTextureForImage:self.backgroundImageBeforeCurrentSession] atIndex:7];
 //        [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:self.backgroundImageBeforeCurrentSession] atIndex:4];
         
         NSArray *allCases = MTIBlendModes.allCases;
@@ -630,7 +640,8 @@ __attribute__((objc_subclassing_restricted))
         parameters.materialMaskDepth2Inverted = layer.materialMask.depth2Inverted;
         parameters.materialMaskBlendMode2 = (int)[allCases indexOfObject:layer.materialMask.blendMode2];
         
-        parameters.clippingMaskComponent = (int)layer.clippingMask.component;
+        parameters.clippingMask1Component = (int)layer.clippingMask1.component;
+        parameters.clippingMask2Component = (int)layer.clippingMask2.component;
         
         double val = ((double)arc4random() / UINT32_MAX);
         CGFloat percent = MIN(1-layer.shape.countJitter*val, 0.99);
@@ -926,8 +937,11 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
             if (layer.materialMask) {
                 [dependencies addObject:layer.materialMask.content];
             }
-            if (layer.clippingMask) {
-                [dependencies addObject:layer.clippingMask.content];
+            if (layer.clippingMask1) {
+                [dependencies addObject:layer.clippingMask1.content];
+            }
+            if (layer.clippingMask2) {
+                [dependencies addObject:layer.clippingMask2.content];
             }
         }
         _dependencies = [dependencies copy];
@@ -952,8 +966,10 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
         MTIMask *newMask = nil;
         MTIMaterialMask *materialMask = layer.materialMask;
         MTIMaterialMask *newMaterialMask = nil;
-        MTIMask *clippingMask = layer.clippingMask;
-        MTIMask *newClippingMask = nil;
+        MTIMask *clippingMask1 = layer.clippingMask1;
+        MTIMask *clippingMask2 = layer.clippingMask2;
+        MTIMask *newClippingMask1 = nil;
+        MTIMask *newClippingMask2 = nil;
         
         if (compositingMask) {
             MTIImage *newCompositingMaskContent = dependencies[pointer];
@@ -1015,12 +1031,17 @@ backgroundImageBeforeCurrentSession:(MTIImage *)backgroundImageBeforeCurrentSess
                                                               position:materialMask.position
                                                                   size:materialMask.size];
         }
-        if (clippingMask) {
-            MTIImage *newClippingMaskContent = dependencies[pointer];
+        if (clippingMask1) {
+            MTIImage *newClippingMask1Content = dependencies[pointer];
             pointer += 1;
-            newClippingMask = [[MTIMask alloc] initWithContent:newClippingMaskContent];
+            newClippingMask1 = [[MTIMask alloc] initWithContent:newClippingMask1Content];
         }
-        MTIBrushLayer *newLayer = [[MTIBrushLayer alloc] initWithContent:newContent contentRegion:layer.contentRegion mask:newMask compositingMask:newCompositingMask materialMask:newMaterialMask clippingMask:newClippingMask layoutUnit:layer.layoutUnit position:layer.position startPosition:layer.startPosition lastPosition:layer.lastPosition size:layer.size startSize:layer.startSize rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode renderingMode:layer.renderingMode renderingBlendMode:layer.renderingBlendMode fillMode:layer.fillMode shape:layer.shape isAlphaLocked:layer.isAlphaLocked];
+        if (clippingMask2) {
+            MTIImage *newClippingMask2Content = dependencies[pointer];
+            pointer += 1;
+            newClippingMask2 = [[MTIMask alloc] initWithContent:newClippingMask2Content];
+        }
+        MTIBrushLayer *newLayer = [[MTIBrushLayer alloc] initWithContent:newContent contentRegion:layer.contentRegion mask:newMask compositingMask:newCompositingMask materialMask:newMaterialMask clippingMask1:newClippingMask1 clippingMask2:newClippingMask2 layoutUnit:layer.layoutUnit position:layer.position startPosition:layer.startPosition lastPosition:layer.lastPosition size:layer.size startSize:layer.startSize rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode renderingMode:layer.renderingMode renderingBlendMode:layer.renderingBlendMode fillMode:layer.fillMode shape:layer.shape isAlphaLocked:layer.isAlphaLocked];
         [newLayers addObject:newLayer];
     }
     return [[MTIMultilayerBrushCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage backgroundImageBeforeCurrentSession:backgroundImageBeforeCurrentSession layers:newLayers rasterSampleCount:_rasterSampleCount outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];

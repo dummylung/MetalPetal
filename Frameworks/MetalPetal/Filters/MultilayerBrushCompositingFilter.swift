@@ -27,7 +27,9 @@ public class MultilayerBrushCompositingFilter: MTIFilter {
         
         public var materialMask: MTIMaterialMask? = nil
         
-        public var clippingMask: MTIMask? = nil
+        public var clippingMask1: MTIMask? = nil
+        
+        public var clippingMask2: MTIMask? = nil
         
         public var layoutUnit: MTIBrushLayer.LayoutUnit
         
@@ -84,7 +86,8 @@ public class MultilayerBrushCompositingFilter: MTIFilter {
             hasher.combine(mask)
             hasher.combine(compositingMask)
             hasher.combine(materialMask)
-            hasher.combine(clippingMask)
+            hasher.combine(clippingMask1)
+            hasher.combine(clippingMask2)
             hasher.combine(layoutUnit)
             hasher.combine(position.x)
             hasher.combine(position.y)
@@ -142,8 +145,12 @@ public class MultilayerBrushCompositingFilter: MTIFilter {
             self.mutating({ $0.materialMask = mask })
         }
         
-        public func clippingMask(_ mask: MTIMask?) -> Layer {
-            self.mutating({ $0.clippingMask = mask })
+        public func clippingMask1(_ mask: MTIMask?) -> Layer {
+            self.mutating({ $0.clippingMask1 = mask })
+        }
+        
+        public func clippingMask2(_ mask: MTIMask?) -> Layer {
+            self.mutating({ $0.clippingMask2 = mask })
         }
         
         public func frame(_ rect: CGRect, layoutUnit: MTIBrushLayer.LayoutUnit) -> Layer {
@@ -265,7 +272,7 @@ extension MultilayerBrushCompositingFilter {
 
 extension MultilayerBrushCompositingFilter.Layer {
     fileprivate func bridgeToObjectiveC() -> MTIBrushLayer {
-        return MTIBrushLayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, materialMask: self.materialMask, clippingMask: self.clippingMask, layoutUnit: self.layoutUnit, position: self.position, startPosition: self.startPosition, lastPosition: self.lastPosition, size: self.size, start: self.startSize, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, renderingMode: self.renderingMode, renderingBlendMode: self.renderingBlendMode, fillMode: self.fillMode, shape: self.shape, isAlphaLocked: self.isAlphaLocked)
+        return MTIBrushLayer(content: self.content, contentRegion: self.contentRegion, mask: self.mask, compositingMask: self.compositingMask, materialMask: self.materialMask, clippingMask1: self.clippingMask1, clippingMask2: self.clippingMask2, layoutUnit: self.layoutUnit, position: self.position, startPosition: self.startPosition, lastPosition: self.lastPosition, size: self.size, start: self.startSize, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, renderingMode: self.renderingMode, renderingBlendMode: self.renderingBlendMode, fillMode: self.fillMode, shape: self.shape, isAlphaLocked: self.isAlphaLocked)
     }
 }
 
