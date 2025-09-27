@@ -50,6 +50,15 @@
     return NO;
 }
 
+
+- (BOOL)renderImage:(MTIImage *)image toDrawableWithRequest:(MTIDrawableRenderingRequest *)request error:(NSError * __autoreleasing *)inOutError completion:(void (^)(MTIRenderTask *))completion {
+    MTIRenderTask *renderTask = [self startTaskToRenderImage:image toDrawableWithRequest:request error:inOutError completion:completion];
+    if (renderTask) {
+        return YES;
+    }
+    return NO;
+}
+
 static const void * const MTICIImageMTIImageAssociationKey = &MTICIImageMTIImageAssociationKey;
 
 - (CIImage *)createCIImageFromImage:(MTIImage *)image options:(MTICIImageCreationOptions *)options error:(NSError * __autoreleasing *)inOutError {

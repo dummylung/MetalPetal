@@ -23,6 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface MTIContext (Rendering)
 
 - (BOOL)renderImage:(MTIImage *)image toDrawableWithRequest:(MTIDrawableRenderingRequest *)request error:(NSError **)error NS_SWIFT_NAME(render(_:toDrawableWithRequest:));
+- (BOOL)renderImage:(MTIImage *)image toDrawableWithRequest:(MTIDrawableRenderingRequest *)request error:(NSError * __autoreleasing *)inOutError completion:(void (^)(MTIRenderTask *))completion;
 
 - (nullable CIImage *)createCIImageFromImage:(MTIImage *)image error:(NSError **)error NS_SWIFT_NAME(makeCIImage(from:));
 

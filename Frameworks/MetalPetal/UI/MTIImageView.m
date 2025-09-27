@@ -221,13 +221,18 @@
                 if ([self.delegate respondsToSelector:@selector(willRender:)]) {
                     [self.delegate willRender:imageToRender];
                 }
-                [context renderImage:imageToRender toDrawableWithRequest:request error:&error];
+                __weak MTIImageView *weakSelf = self;
+                [context renderImage:imageToRender toDrawableWithRequest:request error:&error completion:^(MTIRenderTask *task) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        if ([weakSelf.delegate respondsToSelector:@selector(didRender:)]) {
+                            [weakSelf.delegate didRender:imageToRender];
+                        }
+                    });
+                }];
                 if (error) {
                     MTIPrint(@"%@: Failed to render image %@ - %@",self,imageToRender,error);
                 }
-                if ([self.delegate respondsToSelector:@selector(didRender:)]) {
-                    [self.delegate didRender:imageToRender];
-                }
+                
             } else {
                 //Clear current drawable.
                 MTLRenderPassDescriptor *renderPassDescriptor = view.currentRenderPassDescriptor;
