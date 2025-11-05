@@ -40,7 +40,7 @@
     return [self.class.kernel applyToBackgroundImage:_inputBackgroundImage
                                               layers:_layers
                                    rasterSampleCount:_rasterSampleCount
-                                         scissorRect:_scissorRect
+                                        scissorRects:_scissorRects
                                      outputAlphaType:_outputAlphaType
                              outputTextureDimensions:MTITextureDimensionsMake2DFromCGSize(_inputBackgroundImage.size)
                                    outputPixelFormat:_outputPixelFormat];

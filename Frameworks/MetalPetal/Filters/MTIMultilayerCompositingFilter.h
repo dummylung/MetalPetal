@@ -27,7 +27,7 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic) NSUInteger rasterSampleCount;
 
-@property (nonatomic) CGRect scissorRect;
+@property (nonatomic, nullable) NSArray<NSValue *> *scissorRects;
 
 /// Specifies the alpha type of output image. If `.alphaIsOne` is assigned, the alpha channel of the output image will be set to 1. The default value for this property is `.nonPremultiplied`.
 @property (nonatomic) MTIAlphaType outputAlphaType;

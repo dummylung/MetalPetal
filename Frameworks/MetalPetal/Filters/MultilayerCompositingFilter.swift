@@ -74,7 +74,7 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var isHidden: Bool = false
         
-        public var scissorRect: CGRect?
+        public var scissorRects: [CGRect]? = nil
         
         public var id: UUID?
         
@@ -103,7 +103,7 @@ public class MultilayerCompositingFilter: MTIFilter {
             layer.tintColor = tintColor
             layer.blendMode = blendMode
             layer.isHidden = isHidden
-            layer.scissorRect = scissorRect
+            layer.scissorRects = scissorRects
             return layer
         }
         
@@ -211,9 +211,9 @@ public class MultilayerCompositingFilter: MTIFilter {
         }
     }
     
-    public var scissorRect: CGRect {
-        get { internalFilter.scissorRect }
-        set { internalFilter.scissorRect = newValue }
+    public var scissorRects: [CGRect]? {
+        get { internalFilter.scissorRects?.map({ $0.cgRectValue }) }
+        set { internalFilter.scissorRects = newValue?.map { NSValue(cgRect: $0) } }
     }
     
     public var outputPixelFormat: MTLPixelFormat {
@@ -270,7 +270,7 @@ extension MultilayerCompositingFilter {
 
 extension MultilayerCompositingFilter.Layer {
     fileprivate func bridgeToObjectiveC() -> MTILayer {
-        return MTILayer(content: self.content, contentRegion: self.contentRegion, contentFlipOptions: self.contentFlipOptions, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, isHidden: self.isHidden, scissorRect: self.scissorRect ?? .null)
+        return MTILayer(content: self.content, contentRegion: self.contentRegion, contentFlipOptions: self.contentFlipOptions, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, isHidden: self.isHidden, scissorRects: self.scissorRects?.compactMap{ NSValue(cgRect: $0) })
     }
 }
 

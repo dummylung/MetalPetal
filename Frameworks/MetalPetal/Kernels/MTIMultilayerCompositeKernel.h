@@ -26,7 +26,7 @@ __attribute__((objc_subclassing_restricted))
 - (MTIImage *)applyToBackgroundImage:(MTIImage *)image
                               layers:(NSArray<MTILayer *> *)layers
                    rasterSampleCount:(NSUInteger)rasterSampleCount
-                         scissorRect:(CGRect)scissorRect
+                        scissorRects:(NSArray<NSValue *> *)scissorRects
                      outputAlphaType:(MTIAlphaType)outputAlphaType
              outputTextureDimensions:(MTITextureDimensions)outputTextureDimensions
                    outputPixelFormat:(MTLPixelFormat)outputPixelFormat;

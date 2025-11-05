@@ -355,7 +355,7 @@ __attribute__((objc_subclassing_restricted))
 
 @property (nonatomic,readonly) NSUInteger rasterSampleCount;
 
-@property (nonatomic, readonly) CGRect scissorRect;
+@property (nonatomic, readonly, nullable) NSArray<NSValue *> *scissorRects;
 
 @end
 
@@ -483,12 +483,6 @@ __attribute__((objc_subclassing_restricted))
     
     [MTIVertices.fullViewportSquareVertices encodeDrawCallWithCommandEncoder:commandEncoder context:renderPipeline];
     
-    if (!CGRectIsNull(_scissorRect) && !CGRectIsEmpty(_scissorRect)) {
-        [commandEncoder setScissorRect:(MTLScissorRect){
-            _scissorRect.origin.x, _scissorRect.origin.y, _scissorRect.size.width, _scissorRect.size.height
-        }];
-    }
-    
     //render layers
     CGSize backgroundImageSize = self.backgroundImage.size;
     for (MTILayer *layer in self.layers) {
@@ -566,13 +560,40 @@ __attribute__((objc_subclassing_restricted))
         parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
         [commandEncoder setFragmentBytes:&parameters length:sizeof(parameters) atIndex:0];
         
-        [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
-                    contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width,
-                                             layer.contentRegion.origin.y/layer.content.size.height,
-                                             layer.contentRegion.size.width/layer.content.size.width,
-                                             layer.contentRegion.size.height/layer.content.size.height)
-                      flipOptions:layer.contentFlipOptions
-                   commandEncoder:commandEncoder];
+        NSUInteger scissorRectCount = self.scissorRects.count;
+        if (scissorRectCount <= 1) {
+            if (scissorRectCount == 1) {
+                CGRect rect = [self.scissorRects[0] CGRectValue];
+                if (!CGRectIsNull(rect) && !CGRectIsEmpty(rect)) {
+                    [commandEncoder setScissorRect:(MTLScissorRect){
+                        rect.origin.x, rect.origin.y, rect.size.width, rect.size.height
+                    }];
+                }
+            }
+            [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
+                        contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width,
+                                                 layer.contentRegion.origin.y/layer.content.size.height,
+                                                 layer.contentRegion.size.width/layer.content.size.width,
+                                                 layer.contentRegion.size.height/layer.content.size.height)
+                          flipOptions:layer.contentFlipOptions
+                       commandEncoder:commandEncoder];
+        } else {
+            for (NSValue *rectValue in self.scissorRects) {
+                CGRect rect = [rectValue CGRectValue];
+                if (!CGRectIsNull(rect) && !CGRectIsEmpty(rect)) {
+                    [commandEncoder setScissorRect:(MTLScissorRect){
+                        rect.origin.x, rect.origin.y, rect.size.width, rect.size.height
+                    }];
+                    [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
+                                contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width,
+                                                         layer.contentRegion.origin.y/layer.content.size.height,
+                                                         layer.contentRegion.size.width/layer.content.size.width,
+                                                         layer.contentRegion.size.height/layer.content.size.height)
+                                  flipOptions:layer.contentFlipOptions
+                               commandEncoder:commandEncoder]; // Non-instanced draw
+                }
+            }
+        }
     }
     
     MTIRenderPipeline *outputAlphaTypeRenderPipeline = nil;
@@ -591,6 +612,8 @@ __attribute__((objc_subclassing_restricted))
     }
     
     if (outputAlphaTypeRenderPipeline != nil) {
+        // Reset scissor rect to full viewport before final pass, if needed.
+//        [commandEncoder setScissorRect:(MTLScissorRect){0, 0, _dimensions.width, _dimensions.height}];
         [commandEncoder setRenderPipelineState:outputAlphaTypeRenderPipeline.state];
         [MTIVertices.fullViewportSquareVertices encodeDrawCallWithCommandEncoder:commandEncoder context:outputAlphaTypeRenderPipeline];
     }
@@ -766,10 +789,30 @@ __attribute__((objc_subclassing_restricted))
         parameters.cornerRadius = _MTICornerRadiusGetShadingParameterValue(layer.cornerRadius, layer.cornerCurve);
         [commandEncoder setFragmentBytes:&parameters length:sizeof(parameters) atIndex:0];
         
-        [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
-                    contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width, layer.contentRegion.origin.y/layer.content.size.height, layer.contentRegion.size.width/layer.content.size.width, layer.contentRegion.size.height/layer.content.size.height)
-                      flipOptions:layer.contentFlipOptions
-                   commandEncoder:commandEncoder];
+        NSUInteger scissorRectCount = self.scissorRects.count;
+        if (scissorRectCount <= 1) {
+            if (scissorRectCount == 1) {
+                CGRect rect = [self.scissorRects[0] CGRectValue];
+                if (!CGRectIsNull(rect) && !CGRectIsEmpty(rect)) {
+                    [commandEncoder setScissorRect:(MTLScissorRect){rect.origin.x, rect.origin.y, rect.size.width, rect.size.height}];
+                }
+            }
+            [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
+                        contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width, layer.contentRegion.origin.y/layer.content.size.height, layer.contentRegion.size.width/layer.content.size.width, layer.contentRegion.size.height/layer.content.size.height)
+                          flipOptions:layer.contentFlipOptions
+                       commandEncoder:commandEncoder];
+        } else {
+            for (NSValue *rectValue in self.scissorRects) {
+                CGRect rect = [rectValue CGRectValue];
+                if (!CGRectIsNull(rect) && !CGRectIsEmpty(rect)) {
+                    [commandEncoder setScissorRect:(MTLScissorRect){rect.origin.x, rect.origin.y, rect.size.width, rect.size.height}];
+                    [self drawVerticesForRect:CGRectMake(-layerPixelSize.width/2.0, -layerPixelSize.height/2.0, layerPixelSize.width, layerPixelSize.height)
+                                contentRegion:CGRectMake(layer.contentRegion.origin.x/layer.content.size.width, layer.contentRegion.origin.y/layer.content.size.height, layer.contentRegion.size.width/layer.content.size.width, layer.contentRegion.size.height/layer.content.size.height)
+                                  flipOptions:layer.contentFlipOptions
+                               commandEncoder:commandEncoder];
+                }
+            }
+        }
     }
     
     MTIRenderPipeline *outputAlphaTypeRenderPipeline = nil;
@@ -796,6 +839,8 @@ __attribute__((objc_subclassing_restricted))
             return nil;
         }
         
+        // Reset scissor rect to full viewport before final pass, if needed.
+//        [commandEncoder setScissorRect:(MTLScissorRect){0, 0, _dimensions.width, _dimensions.height}];
         [commandEncoder setRenderPipelineState:outputAlphaTypeRenderPipeline.state];
         [commandEncoder setFragmentTexture:renderTarget.texture atIndex:0];
         [commandEncoder setFragmentSamplerState:[renderingContext resolvedSamplerStateForImage:_backgroundImage] atIndex:0];
@@ -816,7 +861,7 @@ __attribute__((objc_subclassing_restricted))
                backgroundImage:(MTIImage *)backgroundImage
                         layers:(NSArray<MTILayer *> *)layers
              rasterSampleCount:(NSUInteger)rasterSampleCount
-                   scissorRect:(CGRect)scissorRect
+                  scissorRects:(NSArray<NSValue *> *)scissorRects
                outputAlphaType:(MTIAlphaType)outputAlphaType
        outputTextureDimensions:(MTITextureDimensions)outputTextureDimensions
              outputPixelFormat:(MTLPixelFormat)outputPixelFormat {
@@ -829,7 +874,7 @@ __attribute__((objc_subclassing_restricted))
         _alphaType = outputAlphaType;
         _kernel = kernel;
         _layers = layers;
-        _scissorRect = scissorRect;
+        _scissorRects = scissorRects;
         _dimensions = outputTextureDimensions;
         _outputPixelFormat = outputPixelFormat;
         _rasterSampleCount = rasterSampleCount;
@@ -875,10 +920,10 @@ __attribute__((objc_subclassing_restricted))
             pointer += 1;
             newMask = [[MTIMask alloc] initWithContent:newMaskContent component:mask.component mode:mask.mode];
         }
-        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode isHidden:layer.isHidden scissorRect:layer.scissorRect];
+        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode isHidden:layer.isHidden scissorRects:layer.scissorRects];
         [newLayers addObject:newLayer];
     }
-    return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage layers:newLayers rasterSampleCount:_rasterSampleCount scissorRect:_scissorRect outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
+    return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage layers:newLayers rasterSampleCount:_rasterSampleCount scissorRects:_scissorRects outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];
 }
 
 - (MTIImagePromiseDebugInfo *)debugInfo {
@@ -900,7 +945,7 @@ __attribute__((objc_subclassing_restricted))
 - (MTIImage *)applyToBackgroundImage:(MTIImage *)image
                               layers:(NSArray<MTILayer *> *)layers
                    rasterSampleCount:(NSUInteger)rasterSampleCount
-                         scissorRect:(CGRect)scissorRect
+                        scissorRects:(NSArray<NSValue *> *)scissorRects
                      outputAlphaType:(MTIAlphaType)outputAlphaType
              outputTextureDimensions:(MTITextureDimensions)outputTextureDimensions
                    outputPixelFormat:(MTLPixelFormat)outputPixelFormat {
@@ -908,7 +953,7 @@ __attribute__((objc_subclassing_restricted))
                                                                                      backgroundImage:image
                                                                                               layers:layers
                                                                                    rasterSampleCount:rasterSampleCount
-                                                                                         scissorRect:scissorRect
+                                                                                        scissorRects:scissorRects
                                                                                      outputAlphaType:outputAlphaType
                                                                              outputTextureDimensions:outputTextureDimensions
                                                                                    outputPixelFormat:outputPixelFormat];
@@ -933,7 +978,7 @@ void MTIMultilayerCompositingRenderGraphNodeOptimize(MTIRenderGraphNode *node) {
                                                                                                  backgroundImage:lastPromise.backgroundImage
                                                                                                           layers:layers
                                                                                                rasterSampleCount:MAX(recipe.rasterSampleCount,lastPromise.rasterSampleCount)
-                                                                                                     scissorRect:recipe.scissorRect
+                                                                                                    scissorRects:recipe.scissorRects
                                                                                                  outputAlphaType:recipe.alphaType
                                                                                          outputTextureDimensions:MTITextureDimensionsMake2DFromCGSize(lastPromise.backgroundImage.size)
                                                                                                outputPixelFormat:recipe.outputPixelFormat];
