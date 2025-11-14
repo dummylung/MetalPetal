@@ -30,6 +30,7 @@
 #import "MTIMultilayerCompositingFilter.h"
 #import "MTIMultilayerBrushCompositingFilter.h"
 #import "MTIPixellateFilter.h"
+#import "MTIReplaceColorFilter.h"
 #import "MTIRGBColorSpaceConversionFilter.h"
 #import "MTIRGBToneCurveFilter.h"
 #import "MTIRoundCornerFilter.h"

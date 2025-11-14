@@ -428,6 +428,15 @@ namespace metalpetal {
         return float4(color.r*textureColor.r, color.g*textureColor.g, color.b*textureColor.b, textureColor.r);
     }
     
+    fragment float4 replaceColor(VertexOut vertexIn [[stage_in]],
+                                       texture2d<float, access::sample> sourceTexture [[texture(0)]],
+                                       sampler sourceSampler [[sampler(0)]],
+                                       constant float4 &color [[buffer(0)]]
+                                       ) {
+        float4 textureColor = sourceTexture.sample(sourceSampler, vertexIn.textureCoordinate);
+        return float4(color.r, color.g, color.b, textureColor.a);
+    }
+    
 //    class QItem {
 //    public:
 //        int row;
