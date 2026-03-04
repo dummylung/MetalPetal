@@ -10,8 +10,9 @@
 
 @implementation MTILayer
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion compositingMask:(MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode {
-    return [self initWithContent:content
+- (instancetype)initWithRefId:(nullable NSUUID *)refId content:(MTIImage *)content contentRegion:(CGRect)contentRegion compositingMask:(MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode {
+    return [self initWithRefId:nil
+                       content:content
                    contentRegion:contentRegion
               contentFlipOptions:MTILayerFlipOptionsDonotFlip
                  compositingMask:compositingMask
@@ -23,8 +24,9 @@
                        blendMode:blendMode];
 }
 
-- (instancetype)initWithContent:(MTIImage *)content layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode {
-    return [self initWithContent:content
+- (instancetype)initWithRefId:(nullable NSUUID *)refId content:(MTIImage *)content layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode {
+    return [self initWithRefId:nil
+                       content:content
                    contentRegion:content.extent
               contentFlipOptions:MTILayerFlipOptionsDonotFlip
                  compositingMask:nil
@@ -36,8 +38,9 @@
                        blendMode:blendMode];
 }
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode {
-    return [self initWithContent:content
+- (instancetype)initWithRefId:(nullable NSUUID *)refId content:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity blendMode:(MTIBlendMode)blendMode {
+    return [self initWithRefId:nil
+                       content:content
                    contentRegion:contentRegion
               contentFlipOptions:contentFlipOptions
                  compositingMask:compositingMask
@@ -50,8 +53,9 @@
                        blendMode:blendMode];
 }
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode {
-    return [self initWithContent:content
+- (instancetype)initWithRefId:(nullable NSUUID *)refId content:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions compositingMask:(MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode {
+    return [self initWithRefId:nil
+                      content:content
                    contentRegion:contentRegion
               contentFlipOptions:contentFlipOptions
                             mask:nil
@@ -65,12 +69,13 @@
                        blendMode:blendMode];
 }
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode {
-    return [self initWithContent:content contentRegion:contentRegion contentFlipOptions:contentFlipOptions mask:mask compositingMask:compositingMask layoutUnit:layoutUnit position:position size:size rotation:rotation opacity:opacity cornerRadius:MTICornerRadiusMake(0) cornerCurve:MTICornerCurveCircular tintColor:tintColor blendMode:blendMode isHidden:NO scissorRects:nil];
+- (instancetype)initWithRefId:(nullable NSUUID *)refId content:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode {
+    return [self initWithRefId:nil content:content contentRegion:contentRegion contentFlipOptions:contentFlipOptions mask:mask compositingMask:compositingMask layoutUnit:layoutUnit position:position size:size rotation:rotation opacity:opacity cornerRadius:MTICornerRadiusMake(0) cornerCurve:MTICornerCurveCircular tintColor:tintColor blendMode:blendMode isHidden:NO scissorRects:nil pattern:nil];
 }
 
-- (instancetype)initWithContent:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode isHidden:(BOOL)isHidden scissorRects:(nullable NSArray <NSValue *> *)scissorRects {
+- (instancetype)initWithRefId:(nullable NSUUID *)refId content:(MTIImage *)content contentRegion:(CGRect)contentRegion contentFlipOptions:(MTILayerFlipOptions)contentFlipOptions mask:(nullable MTIMask *)mask compositingMask:(nullable MTIMask *)compositingMask layoutUnit:(MTILayerLayoutUnit)layoutUnit position:(CGPoint)position size:(CGSize)size rotation:(float)rotation opacity:(float)opacity cornerRadius:(MTICornerRadius)cornerRadius cornerCurve:(MTICornerCurve)cornerCurve tintColor:(MTIColor)tintColor blendMode:(MTIBlendMode)blendMode isHidden:(BOOL)isHidden scissorRects:(nullable NSArray <NSValue *> *)scissorRects pattern:(nullable MTILayerPattern *)pattern {
     if (self = [super init]) {
+        _refId = refId;
         _content = content;
         _contentRegion = contentRegion;
         _contentFlipOptions = contentFlipOptions;
@@ -87,6 +92,7 @@
         _blendMode = blendMode;
         _isHidden = isHidden;
         _scissorRects = scissorRects;
+        _pattern = pattern;
     }
     return self;
 }

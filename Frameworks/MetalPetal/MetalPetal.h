@@ -98,6 +98,7 @@
 #import "MTISKSceneRenderer.h"
 #import "MTIImageView.h"
 #import "MTIThreadSafeImageView.h"
+#import "MTILayerPattern.h"
 
 FOUNDATION_EXPORT double MetalPetalVersionNumber;
 FOUNDATION_EXPORT const unsigned char MetalPetalVersionString[];

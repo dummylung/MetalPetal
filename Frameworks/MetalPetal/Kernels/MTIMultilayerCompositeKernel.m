@@ -920,7 +920,7 @@ __attribute__((objc_subclassing_restricted))
             pointer += 1;
             newMask = [[MTIMask alloc] initWithContent:newMaskContent component:mask.component mode:mask.mode];
         }
-        MTILayer *newLayer = [[MTILayer alloc] initWithContent:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode isHidden:layer.isHidden scissorRects:layer.scissorRects];
+        MTILayer *newLayer = [[MTILayer alloc] initWithRefId:layer.refId content:newContent contentRegion:layer.contentRegion contentFlipOptions:layer.contentFlipOptions mask:newMask compositingMask:newCompositingMask layoutUnit:layer.layoutUnit position:layer.position size:layer.size rotation:layer.rotation opacity:layer.opacity cornerRadius:layer.cornerRadius cornerCurve:layer.cornerCurve tintColor:layer.tintColor blendMode:layer.blendMode isHidden:layer.isHidden scissorRects:layer.scissorRects pattern:layer.pattern];
         [newLayers addObject:newLayer];
     }
     return [[MTIMultilayerCompositingRecipe alloc] initWithKernel:_kernel backgroundImage:backgroundImage layers:newLayers rasterSampleCount:_rasterSampleCount scissorRects:_scissorRects outputAlphaType:_alphaType outputTextureDimensions:_dimensions outputPixelFormat:_outputPixelFormat];

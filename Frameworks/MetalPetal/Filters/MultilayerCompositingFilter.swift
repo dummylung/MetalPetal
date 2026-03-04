@@ -44,6 +44,8 @@ public class MultilayerCompositingFilter: MTIFilter {
     
     public struct Layer: Hashable, Equatable {
         
+        public var refId: UUID? = nil
+        
         public var content: MTIImage
         
         public var contentRegion: CGRect
@@ -76,7 +78,7 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         public var scissorRects: [CGRect]? = nil
         
-        public var id: UUID?
+        public var pattern: MTILayerPattern? = nil
         
         public init(content: MTIImage) {
             self.content = content
@@ -88,7 +90,7 @@ public class MultilayerCompositingFilter: MTIFilter {
         
         func copy() -> MultilayerCompositingFilter.Layer {
             var layer = MultilayerCompositingFilter.Layer(content: content)
-            layer.id = id
+            layer.refId = refId
             layer.contentRegion = contentRegion
             layer.contentFlipOptions = contentFlipOptions
             layer.mask = mask
@@ -104,10 +106,12 @@ public class MultilayerCompositingFilter: MTIFilter {
             layer.blendMode = blendMode
             layer.isHidden = isHidden
             layer.scissorRects = scissorRects
+            layer.pattern = pattern
             return layer
         }
         
         public func hash(into hasher: inout Hasher) {
+            hasher.combine(refId)
             hasher.combine(content)
             hasher.combine(contentRegion.origin.x)
             hasher.combine(contentRegion.origin.y)
@@ -127,6 +131,7 @@ public class MultilayerCompositingFilter: MTIFilter {
             hasher.combine(cornerCurve)
             hasher.combine(tintColor)
             hasher.combine(blendMode)
+            hasher.combine(pattern)
         }
         
         private func mutating(_ block: (inout Layer) -> Void) -> Layer {
@@ -270,7 +275,7 @@ extension MultilayerCompositingFilter {
 
 extension MultilayerCompositingFilter.Layer {
     fileprivate func bridgeToObjectiveC() -> MTILayer {
-        return MTILayer(content: self.content, contentRegion: self.contentRegion, contentFlipOptions: self.contentFlipOptions, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, isHidden: self.isHidden, scissorRects: self.scissorRects?.compactMap{ NSValue(cgRect: $0) })
+        return MTILayer(refId: self.refId, content: self.content, contentRegion: self.contentRegion, contentFlipOptions: self.contentFlipOptions, mask: self.mask, compositingMask: self.compositingMask, layoutUnit: self.layoutUnit, position: self.position, size: self.size, rotation: self.rotation, opacity: self.opacity, cornerRadius: self.cornerRadius, cornerCurve: self.cornerCurve, tintColor: self.tintColor, blendMode: self.blendMode, isHidden: self.isHidden, scissorRects: self.scissorRects?.compactMap{ NSValue(cgRect: $0) }, pattern: self.pattern)
     }
 }
 
