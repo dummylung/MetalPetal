@@ -80,8 +80,7 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
         }
 
         let canvasSize = inputBackgroundImage.size
-        let canvasWidth = CGFloat(canvasSize.width)
-        let canvasHeight = CGFloat(canvasSize.height)
+        var displaySize = canvasSize
         
         var processedLayers: [MTILayer] = []
         
@@ -90,15 +89,24 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                 processedLayers.append(layer)
                 continue
             }
-
+            
+            if pattern.cropRect != .null {
+                displaySize = pattern.cropRect.size
+            }
+            
+            let displayWidth = CGFloat(displaySize.width)
+            let displayHeight = CGFloat(displaySize.height)
+            let canvasWidth = CGFloat(canvasSize.width)
+            let canvasHeight = CGFloat(canvasSize.height)
+            
             // 1. Stable Grid Calculation
             // Using floor ensures the grid indices don't "flicker" at the edges
-            let colOffset = Int(floor(layer.position.x / canvasWidth))
-            let rowOffset = Int(floor(layer.position.y / canvasHeight))
+            let colOffset = Int(floor(layer.position.x / displayWidth))
+            let rowOffset = Int(floor(layer.position.y / displayHeight))
             
             // Anchor is the position of the (0,0) tile relative to the canvas
-            let anchorX = layer.position.x - CGFloat(colOffset) * canvasWidth
-            let anchorY = layer.position.y - CGFloat(rowOffset) * canvasHeight
+            let anchorX = layer.position.x - CGFloat(colOffset) * displayWidth
+            let anchorY = layer.position.y - CGFloat(rowOffset) * displayHeight
             
             // 2. Iterate through neighbors
             // Range -3...3 handles patterns with large offsets (like half-drop) safely
@@ -109,18 +117,18 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                     let absoluteCol = colOffset + xGrid
                     let absoluteRow = rowOffset + yGrid
                     
-                    var candidateX = anchorX + (CGFloat(xGrid) * canvasWidth)
-                    var candidateY = anchorY + (CGFloat(yGrid) * canvasHeight)
+                    var candidateX = anchorX + (CGFloat(xGrid) * displayWidth)
+                    var candidateY = anchorY + (CGFloat(yGrid) * displayHeight)
                     
                     // 3. Apply Pattern Offsets (Half-Drop / Half-Brick)
                     switch pattern.type {
                     case .seamedHalfDrop, .seamedHalfDropFlip:
                         if abs(absoluteCol) % 2 == 1 {
-                            candidateY += canvasHeight / 2.0
+                            candidateY += displayHeight / 2.0
                         }
                     case .seamedHalfBrick, .seamedHalfBrickFlip:
                         if abs(absoluteRow) % 2 == 1 {
-                            candidateX += canvasWidth / 2.0
+                            candidateX += displayWidth / 2.0
                         }
                     default:
                         break
@@ -132,47 +140,57 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                     let angle = transform?.angle.radianToPositiveRange() ?? 0
                     
                     // 5. Geometric Transformation of the Center Point
-                    // We transform the center point and determine the effective visual size
                     var finalX = candidateX
                     var finalY = candidateY
-                    var effectiveHalfW = layer.size.width / 2.0
-                    var effectiveHalfH = layer.size.height / 2.0
+                    var effectiveHalfW = displayWidth / 2.0
+                    var effectiveHalfH = displayHeight / 2.0
                     
                     // Normalize angle to check for 90/270 degree swaps
                     let isQuarterRotated = abs(angle.truncatingRemainder(dividingBy: .pi) - (.pi / 2.0)) < 0.01
                     
                     if isQuarterRotated {
                         // Swap dimensions for intersection check
-                        effectiveHalfW = layer.size.height / 2.0
-                        effectiveHalfH = layer.size.width / 2.0
+                        effectiveHalfW = displayHeight / 2.0
+                        effectiveHalfH = displayWidth / 2.0
                     }
 
-                    // Apply coordinate transformations based on angle
-                    // Note: These transformations must map coordinates into the canvas bounds correctly
+                    // Apply coordinate transformations based on angle around the center of the CANVAS
+                    let centerX = canvasWidth / 2.0
+                    let centerY = canvasHeight / 2.0
+                    
+                    // Translate to canvas origin
+                    var tempX = finalX - centerX
+                    var tempY = finalY - centerY
+                    
                     if abs(angle - (.pi * 0.5)) < 0.01 { // 90 degrees
-                        let oldX = finalX
-                        finalX = finalY
-                        finalY = canvasWidth - oldX
+                        let oldX = tempX
+                        tempX = tempY
+                        tempY = -oldX
                     } else if abs(angle - .pi) < 0.01 { // 180 degrees
-                        finalX = canvasWidth - finalX
-                        finalY = canvasHeight - finalY
+                        tempX = -tempX
+                        tempY = -tempY
                     } else if abs(angle - (.pi * 1.5)) < 0.01 { // 270 degrees
-                        let oldX = finalX
-                        finalX = canvasHeight - finalY
-                        finalY = oldX
+                        let oldX = tempX
+                        tempX = -tempY
+                        tempY = oldX
                     }
                     
-                    // Apply Flip transformation to position if necessary
+                    // Translate back
+                    finalX = tempX + centerX
+                    finalY = tempY + centerY
+                    
+                    // Apply Flip transformation to position relative to canvas
                     if flipX {
                         finalX = canvasWidth - finalX
                     }
 
-                    // 6. Intersection Check using EFFECTIVE dimensions
+                    // 6. Intersection Check using EFFECTIVE dimensions against CANVAS bounds
                     let layerMinX = finalX - effectiveHalfW
                     let layerMaxX = finalX + effectiveHalfW
                     let layerMinY = finalY - effectiveHalfH
                     let layerMaxY = finalY + effectiveHalfH
                     
+                    // Fix: Check against canvasWidth and canvasHeight instead of displayWidth/displayHeight
                     if layerMinX < canvasWidth && layerMaxX > 0 && layerMinY < canvasHeight && layerMaxY > 0 {
                         var contentFlipOptions = layer.contentFlipOptions
                         if flipX {
@@ -204,7 +222,7 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
             rasterSampleCount: UInt(rasterSampleCount),
             scissorRects: hasPatternType ? [] : (scissorRects ?? []),
             outputAlphaType: outputAlphaType,
-            outputTextureDimensions: MTITextureDimensions(cgSize: inputBackgroundImage.size),
+            outputTextureDimensions: MTITextureDimensions(cgSize: canvasSize),
             outputPixelFormat: outputPixelFormat
         )
     }

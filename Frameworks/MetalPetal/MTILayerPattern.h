@@ -22,6 +22,7 @@ typedef MTILayerTransform (^MTILayerPatternTransformHandler)(int col, int row, i
 @interface MTILayerPattern : NSObject
 
 @property (nonatomic, assign) MTILayerPatternType type;
+@property (nonatomic, assign) CGRect cropRect;
 @property (nonatomic, copy, nullable) MTILayerPatternTransformHandler transformHandler;
 
 - (instancetype)initWithType:(MTILayerPatternType)type;
