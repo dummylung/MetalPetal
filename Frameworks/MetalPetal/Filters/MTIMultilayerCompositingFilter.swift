@@ -100,7 +100,6 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
             let canvasHeight = CGFloat(canvasSize.height)
             
             // 1. Stable Grid Calculation
-            // Using floor ensures the grid indices don't "flicker" at the edges
             let colOffset = Int(floor(layer.position.x / displayWidth))
             let rowOffset = Int(floor(layer.position.y / displayHeight))
             
@@ -109,8 +108,10 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
             let anchorY = layer.position.y - CGFloat(rowOffset) * displayHeight
             
             // 2. Iterate through neighbors
-            // Range -3...3 handles patterns with large offsets (like half-drop) safely
             let range = -3...3
+            
+            // Temporary array to hold generated layers and their grid distance
+            var currentPatternLayers: [(layer: MTILayer, gridDistance: Int)] = []
             
             for xGrid in range {
                 for yGrid in range {
@@ -142,18 +143,7 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                     // 5. Geometric Transformation of the Center Point
                     var finalX = candidateX
                     var finalY = candidateY
-                    var effectiveHalfW = displayWidth / 2.0
-                    var effectiveHalfH = displayHeight / 2.0
                     
-                    // Normalize angle to check for 90/270 degree swaps
-                    let isQuarterRotated = abs(angle.truncatingRemainder(dividingBy: .pi) - (.pi / 2.0)) < 0.01
-                    
-                    if isQuarterRotated {
-                        // Swap dimensions for intersection check
-                        effectiveHalfW = displayHeight / 2.0
-                        effectiveHalfH = displayWidth / 2.0
-                    }
-
                     // Apply coordinate transformations based on angle around the center of the CANVAS
                     let centerX = canvasWidth / 2.0
                     let centerY = canvasHeight / 2.0
@@ -184,17 +174,18 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                         finalX = canvasWidth - finalX
                     }
 
-                    // 6. Intersection Check using EFFECTIVE dimensions against CANVAS bounds
-                    let layerMinX = finalX - effectiveHalfW
-                    let layerMaxX = finalX + effectiveHalfW
-                    let layerMinY = finalY - effectiveHalfH
-                    let layerMaxY = finalY + effectiveHalfH
+                    // 6. Intersection Check using ACTUAL layer size (Safe Radius for rotation)
+                    // We use the hypotenuse of the actual layer size to ensure we don't cull overlapping corners
+                    let safeRadius = hypot(layer.size.width, layer.size.height) / 2.0
                     
-                    // Fix: Check against canvasWidth and canvasHeight instead of displayWidth/displayHeight
+                    let layerMinX = finalX - safeRadius
+                    let layerMaxX = finalX + safeRadius
+                    let layerMinY = finalY - safeRadius
+                    let layerMaxY = finalY + safeRadius
+                    
                     if layerMinX < canvasWidth && layerMaxX > 0 && layerMinY < canvasHeight && layerMaxY > 0 {
                         var contentFlipOptions = layer.contentFlipOptions
                         if flipX {
-                            // Toggle horizontal flip
                             if contentFlipOptions.contains(.flipHorizontally) {
                                 contentFlipOptions.remove(.flipHorizontally)
                             } else {
@@ -208,10 +199,22 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                             rotation: layer.rotation - Float(angle),
                             contentFlipOptions: contentFlipOptions
                         )
-                        processedLayers.append(newInstance)
+                        
+                        // Calculate distance based on the logical grid offset.
+                        // The main layer is exactly at xGrid == 0 and yGrid == 0.
+                        let gridDistance = abs(xGrid) + abs(yGrid)
+                        
+                        currentPatternLayers.append((layer: newInstance, gridDistance: gridDistance))
                     }
                 }
             }
+            
+            // Sort layers so that the ones furthest away in the grid are drawn first (bottom),
+            // and the one at (0,0) is drawn last (top).
+            currentPatternLayers.sort { $0.gridDistance > $1.gridDistance }
+            
+            // Append the sorted layers to the final processing array
+            processedLayers.append(contentsOf: currentPatternLayers.map { $0.layer })
         }
         
         let hasPatternType = layers.contains(where: { $0.pattern != nil })
