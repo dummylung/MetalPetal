@@ -202,7 +202,8 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                         
                         // Calculate distance based on the logical grid offset.
                         // The main layer is exactly at xGrid == 0 and yGrid == 0.
-                        let gridDistance = abs(xGrid) + abs(yGrid)
+//                        let gridDistance = abs(xGrid) + abs(yGrid)
+                        let gridDistance = Int(layer.position.distance(to: newInstance.position))
                         
                         currentPatternLayers.append((layer: newInstance, gridDistance: gridDistance))
                     }
