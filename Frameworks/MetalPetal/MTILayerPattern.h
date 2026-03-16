@@ -17,13 +17,24 @@ typedef struct {
     bool flipX;
 } MTILayerTransform;
 
-typedef MTILayerTransform (^MTILayerPatternTransformHandler)(int col, int row, int sub);
+typedef struct {
+    NSInteger col;
+    NSInteger row;
+    NSInteger sub;
+    CGPoint mappedPosition;
+} MTILayerGridIndex;
+
+
+typedef MTILayerTransform (^MTILayerPatternTransformHandler)(NSInteger col, NSInteger row, NSInteger sub);
+typedef MTILayerGridIndex (^MTILayerPatternGridIndexHandler)(CGPoint position, CGSize tileSize);
 
 @interface MTILayerPattern : NSObject
 
 @property (nonatomic, assign) MTILayerPatternType type;
 @property (nonatomic, assign) CGRect cropRect;
-@property (nonatomic, copy, nullable) MTILayerPatternTransformHandler transformHandler;
+@property (nonatomic, copy, nonnull) MTILayerPatternTransformHandler transformHandler;
+@property (nonatomic, copy, nonnull) MTILayerPatternGridIndexHandler gridIndexHandler;
+@property (nonatomic, copy, nonnull) MTILayerPatternGridIndexHandler positionHandler;
 
 - (instancetype)initWithType:(MTILayerPatternType)type;
 
