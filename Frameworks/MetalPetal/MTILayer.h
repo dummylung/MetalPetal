@@ -55,11 +55,6 @@ typedef NS_CLOSED_ENUM(NSInteger, MTILayerPatternType) {
     MTILayerPatternTypeSeamedButterfly = 19
 } NS_SWIFT_NAME(MTILayer.PatternType);
 
-typedef NS_CLOSED_ENUM(NSInteger, MTILayerPatternShapeType) {
-    MTILayerPatternShapeTypeRectangle = 0,
-    MTILayerPatternShapeTypeRightAngledTriangle = 1,
-    MTILayerPatternShapeTypeEquilateralTriangle = 2,
-} NS_SWIFT_NAME(MTILayer.PatternShapeType);
 
 /// A MTILayer represents a compositing layer for MTIMultilayerCompositingFilter. MTILayers use a UIKit like coordinate system.
 __attribute__((objc_subclassing_restricted))

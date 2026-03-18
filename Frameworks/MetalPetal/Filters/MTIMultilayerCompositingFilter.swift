@@ -121,20 +121,40 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
             let maxYGrid = Int(ceil((canvasHeight - anchorY) / tileHeight)) + 2
             
             // Determine how many sub-tiles exist per grid cell.
-//            let patternShapeType: MTILayer.PatternShapeType
             let subTilesCount: Int
             switch pattern.type {
             case .seamedBowtie, .seamedButterfly, .seamlessCrossMirror:
-//                patternShapeType = .rightAngledTriangle
                 subTilesCount = 2
             case .seamedCurrent, .seamedFishScale, .seamedFallenLeaves, .seamlessPyramidMirror:
-//                patternShapeType = .equilateralTriangle
                 subTilesCount = 2
             default:
-//                patternShapeType = .rectangle
                 subTilesCount = 1
             }
-//            print("---- minXGrid", minXGrid, maxXGrid, gridIndex.col, gridIndex.row, gridIndex.sub, (gridIndex.col - gridIndex.row).mod(x: 3), layer.position.x, gridIndex.mappedPosition, layer.position.x / (tileWidth * 3))
+
+            func getUnitPosition() -> CGPoint {
+                switch pattern.type {
+                case .seamlessPyramidMirror:
+                    var x = Int(adjustedLayerPosition.x+tileWidthHalf)
+                    var y = Int(adjustedLayerPosition.y+tileHeight)
+                    
+                    let widthUnits: Int = 3
+                    let heightUnits: Int = 2
+                    
+                    if x.mod(x: Int(tileWidth)*widthUnits) > Int(tileWidth) * (widthUnits-1) {
+                        x -= Int(tileWidth * (CGFloat(widthUnits) * 0.5))
+                        y -= Int(tileHeight * (CGFloat(heightUnits) * 0.5))
+                    }
+                    
+                    x = x.mod(x: Int(tileWidth)*widthUnits)
+                    y = y.mod(x: Int(tileHeight)*heightUnits)
+                    
+                    return CGPoint(x: x, y: y)
+                default:
+                    // TODO for other types if needed
+                    return adjustedLayerPosition
+                }
+            }
+            let unitPosition = getUnitPosition()
             
             // Temporary array to hold generated layers and their grid distance
             var currentPatternLayers: [(layer: MTILayer, gridDistance: Int)] = []
@@ -263,16 +283,43 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                             angle = 0
                             
                             let unitIndex = (gridIndex.col - gridIndex.row).mod(x: 3)
-//                            let absoluteIndex = (absoluteCol - absoluteRow).mod(x: 3)
+                            if flipX {
+                                finalX = canvasWidth - finalX
+                            }
+                            let center = CGPoint(x: tileWidth*0.5, y: (canvasHeight-tileHeight)*0.5)
+                            
+                            let A = CGPoint(x: tileWidthHalf, y: 0)
+                            let B = A + CGPoint(x: tileWidth, y: 0)
+                            let C = CGPoint(x: 0, y: tileHeight)
+                            let D = C + CGPoint(x: tileWidth, y: 0)
+                            let E = D + CGPoint(x: tileWidth, y: 0)
+                            let F = CGPoint(x: tileWidthHalf, y: tileHeight*2)
+                            let G = F + CGPoint(x: tileWidth, y: 0)
+                            
+                            let unit = CGRect(origin: .zero, size: CGSize(width: tileWidth*2, height: tileHeight*2))
+                            
+                            let ul = unitPosition.distance(to: CGPoint(x: unit.minX, y: unit.minY))
+                            let bl = unitPosition.distance(to: CGPoint(x: unit.minX, y: unit.maxY))
+                            let ur = unitPosition.distance(to: CGPoint(x: unit.maxX, y: unit.minY))
+                            let br = unitPosition.distance(to: CGPoint(x: unit.maxX, y: unit.maxY))
+                            
+                            let ab = unitPosition.distance(to: (A+B)/2)
+                            let ac = unitPosition.distance(to: (A+C)/2)
+                            let ad = unitPosition.distance(to: (A+D)/2)
+                            let bd = unitPosition.distance(to: (B+D)/2)
+                            let be = unitPosition.distance(to: (B+E)/2)
+                            let cd = unitPosition.distance(to: (C+D)/2)
+                            let de = unitPosition.distance(to: (D+E)/2)
+                            let cf = unitPosition.distance(to: (C+F)/2)
+                            let df = unitPosition.distance(to: (D+F)/2)
+                            let dg = unitPosition.distance(to: (D+G)/2)
+                            let eg = unitPosition.distance(to: (E+G)/2)
+                            let fg = unitPosition.distance(to: (F+G)/2)
                             
                             switch subIndex {
                             case 0:
-                                if flipX {
-                                    finalX = canvasWidth - finalX
-                                }
-                                let center = CGPoint(x: tileWidth*0.5, y: (canvasHeight-tileHeight)*0.5)
                                 switch gridIndex.sub {
-                                case 0:
+                                case 0: // ok
                                     switch unitIndex {
                                     case 0:
                                         let pt = CGPoint(x: finalX, y: finalY).rotatedBy(0, anchor: center)
@@ -295,26 +342,92 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                                 case 1:
                                     switch unitIndex {
                                     case 0:
-                                        let pt = CGPoint(x: finalX, y: finalY).rotatedBy(0, anchor: center)
-                                        finalX = pt.x
-                                        finalY = pt.y
-                                        angle = 0
-                                    case 1:
-                                        let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_120, anchor: center)
-                                        finalX = pt.x
-                                        finalY = pt.y
-                                        angle = pi_120
-                                    case 2:
-                                        if Int(abs(gridIndex.row) % 2 == 0 ? layer.position.x : (layer.position.x-tileWidth*1.5)).mod(x: (Int(tileWidth) * 3)) < Int(tileWidthHalf) {
-                                            let pt = CGPoint(x: finalX, y: finalY).rotatedBy(0, anchor: center)
-                                            finalX = pt.x
-                                            finalY = pt.y
-                                            angle = 0
+                                        if unitPosition.y <= tileHeight {
+                                            let min = min(ac, ul)
+                                            if min == ac { // ac ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_120, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = pi_120
+                                            } else { // ul ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_120, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -pi_120
+                                            }
                                         } else {
-                                            let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_120, anchor: center)
-                                            finalX = pt.x
-                                            finalY = pt.y
-                                            angle = -pi_120
+                                            let min = min(de, min(dg, eg))
+                                            if min == de { // de
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_120, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -pi_120
+                                            } else if min == dg { // dg
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(0, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = 0
+                                            } else { // eg ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_120, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = pi_120
+                                            }
+                                        }
+                                    case 1:
+                                        if unitPosition.y <= tileHeight {
+                                            let min = min(ab, min(ad, bd))
+                                            if min == ab {
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(0, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = 0
+                                            } else if min == ad { // ad ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_120, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = pi_120
+                                            } else { // bd ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_120, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -pi_120
+                                            }
+                                        } else {
+                                            continue
+                                        }
+                                    case 2:
+                                        if unitPosition.y <= tileHeight {
+                                            let min = min(be, ur)
+                                            if min == be { // be ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_120, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -pi_120
+                                            } else { // ur ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_120, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = pi_120
+                                            }
+                                        } else {
+                                            let min = min(cd, min(cf, df))
+                                            if min == cd { // cd ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_120, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = pi_120
+                                            } else if min == cf { // cf ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_120, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -pi_120
+                                            } else { // df ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(0, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = 0
+                                            }
                                         }
                                     default:
                                         break
@@ -322,44 +435,104 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                                 default:
                                     break
                                 }
+                                
                             case 1:
-                                
-                                if flipX {
-                                    finalX = canvasWidth - finalX
-                                }
-                                
-                                let center = CGPoint(x: tileWidth*0.5, y: (canvasHeight-tileHeight)*0.5)
-
                                 switch gridIndex.sub {
                                 case 0:
-                                    
                                     switch unitIndex {
                                     case 0:
-                                        if Int(abs(gridIndex.row) % 2 == 0 ? layer.position.x : (layer.position.x-tileWidth*1.5)).mod(x: (Int(tileWidth) * 3)) < Int(tileWidthHalf) {
-                                            let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_60, anchor: center)
-                                            finalX = pt.x
-                                            finalY = pt.y
-                                            angle = -pi_60
+                                        if unitPosition.y <= tileHeight {
+                                            continue
                                         } else {
-                                            let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60, anchor: center)
-                                            finalX = pt.x
-                                            finalY = pt.y
-                                            angle = pi_60
+                                            let min = min(df, min(dg, fg))
+                                            if min == fg { // fg ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(.pi, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -.pi
+                                            } else if min == df { // df ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_60, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -pi_60
+                                            } else { // dg ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = pi_60
+                                            }
                                         }
                                     case 1:
-                                        let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60-pi_120, anchor: center)
-                                        finalX = pt.x
-                                        finalY = pt.y
-                                        angle = pi_60 + pi_120
+                                        if unitPosition.y <= tileHeight {
+                                            let min = min(cd, min(ac, ad))
+                                            if min == cd { // cd ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_60, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -pi_60
+                                            } else if min == ac { // ac ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = pi_60
+                                            } else { // ad ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-.pi, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = .pi
+                                            }
+                                            
+                                        } else {
+                                            let min = min(eg, br)
+                                            if min == eg { // eg ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = pi_60
+                                            } else { // br ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_60, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -pi_60
+                                            }
+                                        }
                                     case 2:
-                                        let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60+pi_120, anchor: center)
-                                        finalX = pt.x
-                                        finalY = pt.y
-                                        angle = pi_60 - pi_120
+                                        if unitPosition.y <= tileHeight {
+                                            let min = min(bd, min(be, de))
+                                            if min == de { // de ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = pi_60
+                                            } else if min == bd { // bd ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-.pi, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = .pi
+                                            } else { // be ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_60, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -pi_60
+                                            }
+                                        } else {
+                                            let min = min(cf, bl)
+                                            if min == cf { // cf ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_60, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = -pi_60
+                                            } else { // bl ok
+                                                let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60, anchor: center)
+                                                finalX = pt.x
+                                                finalY = pt.y
+                                                angle = pi_60
+                                            }
+                                        }
                                     default:
                                         break
                                     }
-                                case 1:
+                                case 1: // ok
                                     switch unitIndex {
                                     case 0:
                                         let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60, anchor: center)
@@ -367,15 +540,15 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                                         finalY = pt.y
                                         angle = pi_60
                                     case 1:
-                                        let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60-pi_120, anchor: center)
+                                        let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-.pi, anchor: center)
                                         finalX = pt.x
                                         finalY = pt.y
-                                        angle = pi_60 + pi_120
+                                        angle = .pi
                                     case 2:
-                                        let pt = CGPoint(x: finalX, y: finalY).rotatedBy(-pi_60+pi_120, anchor: center)
+                                        let pt = CGPoint(x: finalX, y: finalY).rotatedBy(pi_60, anchor: center)
                                         finalX = pt.x
                                         finalY = pt.y
-                                        angle = pi_60 - pi_120
+                                        angle = -pi_60
                                     default:
                                         break
                                     }
