@@ -419,7 +419,9 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                                 default:
                                     break
                                 }
-                                break
+                                
+                                angle += pi_60
+                                
                             default:
                                 break
                             }
