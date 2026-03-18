@@ -201,7 +201,6 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                         
                         switch pattern.type {
                         case .seamlessPyramidMirror:
-                            
 //                            let centerX = canvasWidth / 2.0
 //                            let centerY = canvasHeight / 2.0
 //                            
@@ -420,8 +419,6 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                                     break
                                 }
                                 
-                                angle += pi_60
-                                
                             default:
                                 break
                             }
@@ -429,7 +426,14 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                         default:
                             break
                         }
-                         
+                        
+                        var finalRotation = ((flipX ? -1 : 1) * layer.rotation) - Float(angle)
+                        switch pattern.type {
+                        case .seamedBasketWeave, .seamedWindmill:
+                            finalRotation = layer.rotation - Float(angle)
+                        default:
+                            break
+                        }
                         
                         // 6. Intersection Check using ACTUAL layer size (Safe Radius for rotation)
                         let safeRadius = hypot(layer.size.width, layer.size.height) / 2.0
@@ -452,7 +456,7 @@ public final class MTIMultilayerCompositingFilter: NSObject, MTIFilter {
                             let newInstance = newLayer(
                                 from: layer,
                                 position: CGPoint(x: finalX, y: finalY),
-                                rotation: layer.rotation - Float(angle),
+                                rotation: finalRotation,
                                 contentFlipOptions: contentFlipOptions
                             )
                             
