@@ -739,9 +739,68 @@ namespace metalpetal {
             
             return textureColor;
         }
-        
-        
-        
+
+        // Creates initial displacement map for the first drag segment of a stroke.
+        // Returns (dx, dy, 0, 0) displacement in pixels for each pixel near the brush.
+        fragment float4 liquify_create_displacement(
+                VertexOut vertexIn [[stage_in]],
+                constant float2& oldCenter [[ buffer(0) ]],
+                constant float2& newCenter [[ buffer(1) ]],
+                constant float& radius [[ buffer(2) ]],
+                constant float& pressure [[ buffer(3) ]]
+            ) {
+            float2 pixelPos = vertexIn.position.xy;
+            float dist = distance(pixelPos, oldCenter);
+            if (dist < radius) {
+                float y = 1.0f - dist / radius;
+                y = smoothstep(0.0f, 1.0f, y);
+                float2 diff = (newCenter - oldCenter) * y * pressure;
+                return float4(diff.x, diff.y, 0.0f, 0.0f);
+            }
+            return float4(0.0f, 0.0f, 0.0f, 0.0f);
+        }
+
+        // Adds a new drag segment's displacement to the existing displacement map.
+        fragment float4 liquify_update_displacement(
+                VertexOut vertexIn [[stage_in]],
+                texture2d<float, access::sample> prevDisplacementMap [[ texture(0) ]],
+                constant float2& oldCenter [[ buffer(0) ]],
+                constant float2& newCenter [[ buffer(1) ]],
+                constant float& radius [[ buffer(2) ]],
+                constant float& pressure [[ buffer(3) ]]
+            ) {
+            constexpr sampler nearestSampler(coord::normalized, address::clamp_to_edge, filter::nearest);
+            float4 currentDisp = prevDisplacementMap.sample(nearestSampler, vertexIn.textureCoordinate);
+
+            float2 pixelPos = vertexIn.position.xy;
+            float dist = distance(pixelPos, oldCenter);
+            if (dist < radius) {
+                float y = 1.0f - dist / radius;
+                y = smoothstep(0.0f, 1.0f, y);
+                float2 diff = (newCenter - oldCenter) * y * pressure;
+                return float4(currentDisp.r + diff.x, currentDisp.g + diff.y, 0.0f, 0.0f);
+            }
+            return currentDisp;
+        }
+
+        // Applies the accumulated displacement map to the original image in a single pass,
+        // eliminating the cumulative blur caused by repeated bicubic resampling.
+        fragment float4 liquify_apply_displacement(
+                VertexOut vertexIn [[stage_in]],
+                texture2d<float, access::sample> sourceTexture [[ texture(0) ]],
+                texture2d<float, access::sample> displacementMap [[ texture(1) ]]
+            ) {
+            constexpr sampler bicubicSampler(coord::normalized, address::clamp_to_zero, filter::bicubic);
+            constexpr sampler dispSampler(coord::normalized, address::clamp_to_edge, filter::nearest);
+
+            float2 disp = displacementMap.sample(dispSampler, vertexIn.textureCoordinate).rg;
+            float2 textureSize = float2(sourceTexture.get_width(), sourceTexture.get_height());
+            float2 targetPixelCoord = vertexIn.position.xy - disp;
+            float2 targetNormalizedCoord = targetPixelCoord / textureSize;
+
+            return sourceTexture.sample(bicubicSampler, targetNormalizedCoord);
+        }
+
     }
 }
 
